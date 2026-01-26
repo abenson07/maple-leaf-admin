@@ -5,7 +5,7 @@
 This is a Next.js application (using Pages Router) that serves as a community dashboard for MLCC (Maple Leaf Community Council) coordinators. The application uses:
 
 - **Next.js 15** with Pages Router architecture
-- **Supabase** as the backend database and authentication provider
+- **Supabase** as the backend database
 - **Relume UI components** (@relume_io/relume-ui) for UI components including Table, Button, Input, Pagination, Breadcrumb, and other design system components
 - **Tailwind CSS** with custom color palette (primary green tones, cream backgrounds)
 - **TypeScript** for type safety

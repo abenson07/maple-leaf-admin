@@ -2,375 +2,772 @@
   "master": {
     "tasks": [
       {
-        "id": "1",
-        "title": "Create Project Structure and Initial Setup",
-        "description": "Set up the basic project structure, initialize version control, and configure development environment",
-        "details": "Initialize a new project repository with appropriate folder structure (src/, docs/, tests/, config/). Set up .gitignore, README.md, and basic configuration files. Choose and configure package manager (npm/yarn for Node.js, pip for Python, etc.). Set up development environment with necessary tools and dependencies.",
-        "testStrategy": "Verify project structure is created correctly, all configuration files are present, and development environment can be successfully initialized on a clean system.",
+        "id": 1,
+        "title": "Setup Next.js 15 Project Structure with Core Dependencies",
+        "description": "Initialize Next.js 15 project with Pages Router, TypeScript, Tailwind CSS, and install required dependencies including Supabase client and Relume UI components",
+        "details": "Create new Next.js 15 project using Pages Router architecture. Install dependencies: @supabase/supabase-js, @relume_io/relume-ui, tailwindcss, typescript, @types/node, @types/react. Configure tailwind.config.js with custom green color palette (#6b8e23) and cream backgrounds. Setup TypeScript configuration. Create lib/supabaseClient.ts and lib/serverSupabase.ts for database connections. Create basic folder structure: pages/, components/, lib/, types/, hooks/.",
+        "testStrategy": "Verify project builds without errors, TypeScript compilation works, Tailwind classes apply correctly, and Supabase client can establish connection",
         "priority": "high",
         "dependencies": [],
         "status": "done",
         "subtasks": [
           {
             "id": 1,
-            "title": "Initialize Git Repository and Version Control",
-            "description": "Set up version control system with Git repository initialization and basic configuration",
+            "title": "Initialize Next.js 15 Project with Pages Router",
+            "description": "Create a new Next.js 15 project using the Pages Router architecture and set up the basic project structure",
             "dependencies": [],
-            "details": "Initialize a new Git repository using 'git init'. Configure Git user settings (name and email). Create initial commit structure. Set up remote repository connection if using GitHub/GitLab. Configure branch protection rules and establish main/develop branch strategy.",
-            "status": "pending",
-            "testStrategy": "Verify Git repository is properly initialized, check Git configuration settings, confirm remote repository connection, and validate initial commit structure",
-            "parentId": "undefined"
+            "details": "Run 'npx create-next-app@15 --typescript --tailwind --pages-src-dir --app false' to create the project. Verify the project uses Pages Router architecture. Initialize git repository and create initial commit.",
+            "status": "done",
+            "testStrategy": "Verify project creates successfully, runs with 'npm run dev', and uses Pages Router structure"
           },
           {
             "id": 2,
-            "title": "Create Project Directory Structure",
-            "description": "Establish organized folder hierarchy for the project with standard directories",
+            "title": "Install Core Dependencies and Type Definitions",
+            "description": "Install all required dependencies including Supabase client, Relume UI, and TypeScript type definitions",
             "dependencies": [
               1
             ],
-            "details": "Create main project directories: src/ for source code, docs/ for documentation, tests/ for test files, config/ for configuration files. Add subdirectories as needed (components/, utils/, assets/, etc.). Ensure proper naming conventions and logical organization of folders.",
-            "status": "pending",
-            "testStrategy": "Verify all required directories are created with correct names and structure, check directory permissions, and validate folder hierarchy matches project standards",
-            "parentId": "undefined"
+            "details": "Install dependencies: @supabase/supabase-js, @relume_io/relume-ui, @types/node, @types/react. Update package.json with correct versions. Run npm install to ensure all dependencies are properly installed.",
+            "status": "done",
+            "testStrategy": "Verify all packages install without conflicts and appear in package.json with correct versions"
           },
           {
             "id": 3,
-            "title": "Configure Package Manager and Dependencies",
-            "description": "Set up package manager and install initial project dependencies",
+            "title": "Configure Tailwind CSS with Custom Color Palette",
+            "description": "Set up Tailwind CSS configuration with custom green color palette and cream backgrounds",
             "dependencies": [
               2
             ],
-            "details": "Choose appropriate package manager (npm, yarn, pip, composer, etc.) based on project technology. Initialize package configuration file (package.json, requirements.txt, composer.json). Install core development dependencies and production libraries. Configure dependency version locking and security scanning.",
-            "status": "pending",
-            "testStrategy": "Verify package manager initialization, test dependency installation process, check for security vulnerabilities in dependencies, and validate version locking mechanisms",
-            "parentId": "undefined"
+            "details": "Configure tailwind.config.js with custom green color palette (#6b8e23) and cream background colors. Extend the default theme with project-specific colors. Ensure proper purge/content configuration for optimal bundle size.",
+            "status": "done",
+            "testStrategy": "Verify custom colors are available in Tailwind classes and apply correctly in the browser"
           },
           {
             "id": 4,
-            "title": "Create Essential Configuration Files",
-            "description": "Generate and configure essential project files including .gitignore, README, and environment configs",
+            "title": "Setup TypeScript Configuration and Supabase Clients",
+            "description": "Configure TypeScript settings and create Supabase client files for database connections",
             "dependencies": [
-              2
+              3
             ],
-            "details": "Create comprehensive .gitignore file for the chosen technology stack. Write detailed README.md with project description, setup instructions, and usage guidelines. Set up environment configuration files (.env templates, config.json). Create EditorConfig and linting configuration files (ESLint, Prettier, etc.).",
-            "status": "pending",
-            "testStrategy": "Verify .gitignore properly excludes unwanted files, validate README completeness and accuracy, test environment configuration loading, and check linting rules enforcement",
-            "parentId": "undefined"
+            "details": "Configure tsconfig.json for strict TypeScript settings. Create lib/supabaseClient.ts for client-side Supabase connection and lib/serverSupabase.ts for server-side operations. Set up proper environment variable handling for Supabase credentials.",
+            "status": "done",
+            "testStrategy": "Verify TypeScript compilation works without errors and Supabase clients can establish connections"
           },
           {
             "id": 5,
-            "title": "Set Up Development Environment and Tools",
-            "description": "Configure development environment with necessary tools, IDE settings, and build processes",
+            "title": "Create Project Folder Structure and Basic Layout",
+            "description": "Establish the complete folder structure and verify the project builds successfully",
             "dependencies": [
-              3,
               4
             ],
-            "details": "Configure IDE/editor settings and extensions. Set up build tools and scripts (webpack, gulp, make, etc.). Configure development server and hot reloading. Set up debugging tools and profilers. Create development workflow scripts for common tasks (start, build, test, deploy).",
-            "status": "pending",
-            "testStrategy": "Test development server startup, verify hot reloading functionality, validate build process execution, test debugging tools integration, and confirm all development scripts work correctly",
-            "parentId": "undefined"
+            "details": "Create folder structure: pages/, components/, lib/, types/, hooks/. Add basic index files where needed. Ensure the project builds without errors using 'npm run build'. Create a basic layout component to verify everything works together.",
+            "status": "done",
+            "testStrategy": "Run 'npm run build' to verify project compiles successfully and all folder structures are accessible"
           },
           {
             "id": 6,
             "title": "Run Unit Tests and Verify Build Compilation",
-            "description": "Execute unit tests and verify that the application builds successfully without compilation errors",
-            "dependencies": [
-              5
-            ],
-            "details": "Run all unit tests using the test runner (npm test, jest, vitest, etc.) to ensure all test suites pass. Execute npm run build (or equivalent build command) to verify the application compiles successfully without TypeScript errors, build errors, or warnings. Fix any failing tests or compilation errors. Ensure build output is generated correctly and all assets are properly bundled.",
-            "status": "pending",
-            "testStrategy": "Run npm test to verify all unit tests pass. Run npm run build to verify successful compilation. Check for TypeScript errors, build warnings, and ensure build output directory is created with expected files. Verify no runtime errors in the built application.",
-            "parentId": "undefined"
+            "description": "Execute unit tests and verify the project builds successfully",
+            "dependencies": [],
+            "details": "Run npm test to execute all unit tests and ensure they pass. Run npm run build to verify the project compiles without errors. Fix any test failures or build errors before marking the task as complete.",
+            "status": "done",
+            "testStrategy": "Verify all unit tests pass and the project builds successfully without errors"
           }
-        ],
-        "updatedAt": "2026-01-26T02:06:53.631Z"
+        ]
       },
       {
-        "id": "2",
-        "title": "Define Core Data Models and Schema",
-        "description": "Create TypeScript type definitions matching existing Supabase database schema",
-        "details": "Convert existing Supabase SQL schemas to TypeScript type definitions. The database is already set up in Supabase with tables: people, memberships, businesses, business_memberships, routes, deliveries, events, event_volunteers, payments, and sponsorships. Create TypeScript interfaces that match the actual database structure for type safety throughout the application.",
-        "testStrategy": "Create unit tests for data model validation, test database migrations up and down, verify referential integrity constraints, and validate data type enforcement.",
+        "id": 2,
+        "title": "Configure Core Layout Components and Navigation",
+        "description": "Configure existing Relume ApplicationShell component with proper navigation and integrate PageHeader component",
+        "details": "Update components/ui/ApplicationShell.tsx to configure navigation menu items for Dashboard, Neighbors, Routes, Businesses, and Events with proper Next.js routing and active state highlighting. Use existing components/ui/PageHeader.tsx for page headers instead of creating custom Topbar. Create components/FilterTabs.tsx for tab-based filtering with badge counts using Relume components. Setup ToastProvider for notifications. Ensure all components use the existing Relume UI components from @components/ui.",
+        "testStrategy": "Test navigation between pages, verify active states, ensure responsive sidebar behavior, and confirm toast notifications display properly",
         "priority": "high",
         "dependencies": [
-          "1"
+          1
         ],
         "status": "done",
         "subtasks": [
           {
             "id": 1,
-            "title": "Run Unit Tests and Verify Build Compilation",
-            "description": "Execute unit tests and verify that the application builds successfully without compilation errors",
+            "title": "Configure ApplicationShell component with navigation",
+            "description": "Update the existing ApplicationShell component to configure navigation menu items for the MLCC dashboard",
             "dependencies": [],
-            "details": "Run all unit tests using the test runner (npm test, jest, vitest, etc.) to ensure all test suites pass. Execute npm run build (or equivalent build command) to verify the application compiles successfully without TypeScript errors, build errors, or warnings. Fix any failing tests or compilation errors. Ensure build output is generated correctly and all assets are properly bundled.",
-            "status": "pending",
-            "testStrategy": "Run npm test to verify all unit tests pass. Run npm run build to verify successful compilation. Check for TypeScript errors, build warnings, and ensure build output directory is created with expected files. Verify no runtime errors in the built application.",
-            "parentId": "undefined"
-          }
-        ],
-        "updatedAt": "2026-01-26T02:16:06.423Z"
-      },
-      {
-        "id": "3",
-        "title": "Implement Authentication and Authorization System",
-        "description": "Build user authentication, session management, and role-based access control",
-        "details": "Implement user registration and login functionality with secure password hashing (bcrypt/scrypt). Set up JWT or session-based authentication. Create middleware for route protection and role-based access control. Implement password reset functionality with secure token generation.",
-        "testStrategy": "Test user registration/login flows, verify password security, test session management, validate access control for different user roles, and test password reset functionality.",
-        "priority": "high",
-        "dependencies": [
-          "2"
-        ],
-        "status": "pending",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Run Unit Tests and Verify Build Compilation",
-            "description": "Execute unit tests and verify that the application builds successfully without compilation errors",
-            "dependencies": [],
-            "details": "Run all unit tests using the test runner (npm test, jest, vitest, etc.) to ensure all test suites pass. Execute npm run build (or equivalent build command) to verify the application compiles successfully without TypeScript errors, build errors, or warnings. Fix any failing tests or compilation errors. Ensure build output is generated correctly and all assets are properly bundled.",
-            "status": "pending",
-            "testStrategy": "Run npm test to verify all unit tests pass. Run npm run build to verify successful compilation. Check for TypeScript errors, build warnings, and ensure build output directory is created with expected files. Verify no runtime errors in the built application.",
-            "parentId": "undefined"
-          }
-        ]
-      },
-      {
-        "id": "4",
-        "title": "Create API Endpoints and Routing",
-        "description": "Develop RESTful API endpoints with proper routing and request handling",
-        "details": "Design and implement RESTful API endpoints following REST conventions (GET, POST, PUT, DELETE). Set up routing with proper URL structure. Implement request validation and sanitization. Add error handling middleware with appropriate HTTP status codes and error messages.",
-        "testStrategy": "Create integration tests for all API endpoints, test request validation, verify proper HTTP status codes, test error handling scenarios, and validate API response formats.",
-        "priority": "medium",
-        "dependencies": [
-          "3"
-        ],
-        "status": "pending",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Run Unit Tests and Verify Build Compilation",
-            "description": "Execute unit tests and verify that the application builds successfully without compilation errors",
-            "dependencies": [],
-            "details": "Run all unit tests using the test runner (npm test, jest, vitest, etc.) to ensure all test suites pass. Execute npm run build (or equivalent build command) to verify the application compiles successfully without TypeScript errors, build errors, or warnings. Fix any failing tests or compilation errors. Ensure build output is generated correctly and all assets are properly bundled.",
-            "status": "pending",
-            "testStrategy": "Run npm test to verify all unit tests pass. Run npm run build to verify successful compilation. Check for TypeScript errors, build warnings, and ensure build output directory is created with expected files. Verify no runtime errors in the built application.",
-            "parentId": "undefined"
-          }
-        ]
-      },
-      {
-        "id": "5",
-        "title": "Build User Interface Components",
-        "description": "Develop reusable UI components and implement the main user interface",
-        "details": "Create a component library with reusable UI elements (buttons, forms, modals, etc.). Implement responsive design using CSS Grid/Flexbox or a framework like Bootstrap/Tailwind. Build main application views and navigation. Ensure accessibility compliance (ARIA labels, keyboard navigation).",
-        "testStrategy": "Test component rendering across different screen sizes, verify accessibility compliance, test user interactions, and validate responsive design on various devices.",
-        "priority": "medium",
-        "dependencies": [
-          "4"
-        ],
-        "status": "pending",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Run Unit Tests and Verify Build Compilation",
-            "description": "Execute unit tests and verify that the application builds successfully without compilation errors",
-            "dependencies": [],
-            "details": "Run all unit tests using the test runner (npm test, jest, vitest, etc.) to ensure all test suites pass. Execute npm run build (or equivalent build command) to verify the application compiles successfully without TypeScript errors, build errors, or warnings. Fix any failing tests or compilation errors. Ensure build output is generated correctly and all assets are properly bundled.",
-            "status": "pending",
-            "testStrategy": "Run npm test to verify all unit tests pass. Run npm run build to verify successful compilation. Check for TypeScript errors, build warnings, and ensure build output directory is created with expected files. Verify no runtime errors in the built application.",
-            "parentId": "undefined"
-          }
-        ]
-      },
-      {
-        "id": "6",
-        "title": "Implement Core Business Logic",
-        "description": "Develop the main application features and business logic as specified in requirements",
-        "details": "Implement the core functionality based on the specific requirements outlined in the PRD. Create service layer classes to handle business logic. Implement data processing, calculations, and workflow management. Add input validation and business rule enforcement.",
-        "testStrategy": "Create comprehensive unit tests for business logic, test edge cases and error conditions, verify business rule enforcement, and validate data processing accuracy.",
-        "priority": "high",
-        "dependencies": [
-          "5"
-        ],
-        "status": "pending",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Run Unit Tests and Verify Build Compilation",
-            "description": "Execute unit tests and verify that the application builds successfully without compilation errors",
-            "dependencies": [],
-            "details": "Run all unit tests using the test runner (npm test, jest, vitest, etc.) to ensure all test suites pass. Execute npm run build (or equivalent build command) to verify the application compiles successfully without TypeScript errors, build errors, or warnings. Fix any failing tests or compilation errors. Ensure build output is generated correctly and all assets are properly bundled.",
-            "status": "pending",
-            "testStrategy": "Run npm test to verify all unit tests pass. Run npm run build to verify successful compilation. Check for TypeScript errors, build warnings, and ensure build output directory is created with expected files. Verify no runtime errors in the built application.",
-            "parentId": "undefined"
-          }
-        ]
-      },
-      {
-        "id": "7",
-        "title": "Add Data Persistence and CRUD Operations",
-        "description": "Implement database operations for creating, reading, updating, and deleting data",
-        "details": "Create data access layer with CRUD operations for all entities. Implement database connection pooling and query optimization. Add transaction support for complex operations. Implement data caching strategies where appropriate using Redis or in-memory caching.",
-        "testStrategy": "Test all CRUD operations, verify transaction rollback scenarios, test database connection handling, validate data integrity, and test caching mechanisms.",
-        "priority": "medium",
-        "dependencies": [
-          "6"
-        ],
-        "status": "pending",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Run Unit Tests and Verify Build Compilation",
-            "description": "Execute unit tests and verify that the application builds successfully without compilation errors",
-            "dependencies": [],
-            "details": "Run all unit tests using the test runner (npm test, jest, vitest, etc.) to ensure all test suites pass. Execute npm run build (or equivalent build command) to verify the application compiles successfully without TypeScript errors, build errors, or warnings. Fix any failing tests or compilation errors. Ensure build output is generated correctly and all assets are properly bundled.",
-            "status": "pending",
-            "testStrategy": "Run npm test to verify all unit tests pass. Run npm run build to verify successful compilation. Check for TypeScript errors, build warnings, and ensure build output directory is created with expected files. Verify no runtime errors in the built application.",
-            "parentId": "undefined"
-          }
-        ]
-      },
-      {
-        "id": "8",
-        "title": "Implement Search and Filtering Functionality",
-        "description": "Add search capabilities and data filtering options for improved user experience",
-        "details": "Implement full-text search functionality using database features or search engines like Elasticsearch. Create filtering and sorting mechanisms for data lists. Add pagination for large datasets. Implement search result highlighting and autocomplete features.",
-        "testStrategy": "Test search accuracy and performance, verify filtering and sorting functionality, test pagination with large datasets, and validate search result relevance.",
-        "priority": "medium",
-        "dependencies": [
-          "7"
-        ],
-        "status": "pending",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Run Unit Tests and Verify Build Compilation",
-            "description": "Execute unit tests and verify that the application builds successfully without compilation errors",
-            "dependencies": [],
-            "details": "Run all unit tests using the test runner (npm test, jest, vitest, etc.) to ensure all test suites pass. Execute npm run build (or equivalent build command) to verify the application compiles successfully without TypeScript errors, build errors, or warnings. Fix any failing tests or compilation errors. Ensure build output is generated correctly and all assets are properly bundled.",
-            "status": "pending",
-            "testStrategy": "Run npm test to verify all unit tests pass. Run npm run build to verify successful compilation. Check for TypeScript errors, build warnings, and ensure build output directory is created with expected files. Verify no runtime errors in the built application.",
-            "parentId": "undefined"
-          }
-        ]
-      },
-      {
-        "id": "9",
-        "title": "Add Logging, Monitoring, and Error Handling",
-        "description": "Implement comprehensive logging, monitoring, and error tracking systems",
-        "details": "Set up structured logging with appropriate log levels (debug, info, warn, error). Implement error tracking and monitoring using tools like Sentry or custom solutions. Add performance monitoring and health check endpoints. Create log rotation and retention policies.",
-        "testStrategy": "Verify log generation at appropriate levels, test error tracking and alerting, validate monitoring metrics collection, and test health check endpoints.",
-        "priority": "medium",
-        "dependencies": [
-          "8"
-        ],
-        "status": "pending",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Set up structured logging system with log levels",
-            "description": "Implement a comprehensive structured logging system with appropriate log levels (debug, info, warn, error) throughout the application",
-            "dependencies": [],
-            "details": "Configure logging framework (e.g., Winston for Node.js, Logback for Java, or Python logging). Set up structured JSON logging format with consistent fields like timestamp, level, message, service name, and request ID. Implement log level configuration through environment variables. Add contextual logging with correlation IDs for request tracing.",
-            "status": "pending",
-            "testStrategy": "Verify logs are generated at correct levels, test log format consistency, validate log level filtering, and ensure sensitive data is not logged",
-            "parentId": "undefined"
+            "details": "Update components/ui/ApplicationShell.tsx to replace the placeholder menuItems with actual navigation links for Dashboard (/dashboard), Neighbors (/people), Routes (/routes), Businesses (/businesses), and Events (/events). Implement Next.js Link components for proper routing. Add active state highlighting based on current route using Next.js useRouter hook. Ensure icons are appropriate for each menu item.",
+            "status": "done",
+            "testStrategy": "Test that navigation links work correctly, active states update based on current route, and the layout renders properly across different screen sizes"
           },
           {
             "id": 2,
-            "title": "Implement error tracking and monitoring system",
-            "description": "Set up error tracking and monitoring using Sentry or similar tools to capture and analyze application errors",
+            "title": "Integrate PageHeader component for page headers",
+            "description": "Use the existing PageHeader component and ensure it integrates properly with ApplicationShell",
             "dependencies": [
               1
             ],
-            "details": "Integrate Sentry SDK or custom error tracking solution. Configure error capture for unhandled exceptions, API errors, and custom error events. Set up error grouping and deduplication. Implement error context capture including user information, request details, and stack traces. Configure alert thresholds and notification channels.",
-            "status": "pending",
-            "testStrategy": "Test error capture for different error types, verify error grouping and deduplication, validate alert notifications, and test error context information",
-            "parentId": "undefined"
+            "details": "Use the existing components/ui/PageHeader.tsx component for page headers throughout the application. Create a wrapper or helper function to make it easy to use PageHeader with breadcrumbs, headings, descriptions, search inputs, and action buttons. Ensure PageHeader works well within the ApplicationShell layout structure. Document usage patterns for consistent implementation across pages.",
+            "status": "done",
+            "testStrategy": "Test PageHeader renders correctly within ApplicationShell, verify breadcrumbs and action buttons work properly, and confirm consistent styling across pages"
           },
           {
             "id": 3,
-            "title": "Add performance monitoring and metrics collection",
-            "description": "Implement performance monitoring to track application metrics, response times, and resource usage",
-            "dependencies": [
-              1
-            ],
-            "details": "Set up application performance monitoring (APM) tools or custom metrics collection. Track key metrics like response times, throughput, error rates, and resource utilization. Implement custom business metrics and counters. Set up dashboards for real-time monitoring using tools like Grafana or built-in monitoring solutions.",
-            "status": "pending",
-            "testStrategy": "Verify metrics collection accuracy, test dashboard functionality, validate performance threshold alerts, and test metrics under load conditions",
-            "parentId": "undefined"
+            "title": "Create FilterTabs component with badge counts",
+            "description": "Build reusable filter tabs component using Relume components for tab-based filtering",
+            "dependencies": [],
+            "details": "Create components/FilterTabs.tsx using Relume Tabs or Button components for tab-based filtering with badge counts. The component should accept tab configuration with labels and counts, implement active tab state management, display badge counts, and handle click events. Use Relume Badge component for count display. Ensure the component is reusable across different pages with different tab configurations.",
+            "status": "done",
+            "testStrategy": "Test tab switching functionality, verify badge counts display correctly, ensure active states work properly, and confirm component is reusable with different configurations"
           },
           {
             "id": 4,
-            "title": "Create health check endpoints and system status monitoring",
-            "description": "Implement health check endpoints to monitor application and dependency status for load balancers and monitoring systems",
+            "title": "Setup ToastProvider for notifications",
+            "description": "Configure toast notification system for application-wide user feedback",
             "dependencies": [
-              1
+              3
             ],
-            "details": "Create /health and /ready endpoints that check application status, database connectivity, external service availability, and resource health. Implement different health check levels (liveness, readiness, startup probes). Add dependency health checks for databases, caches, and external APIs. Return appropriate HTTP status codes and detailed health information.",
-            "status": "pending",
-            "testStrategy": "Test health endpoints under normal and failure conditions, verify dependency health checks, validate response formats, and test integration with load balancers",
-            "parentId": "undefined"
+            "details": "Setup ToastProvider for application-wide notifications using a toast library compatible with React (e.g., react-hot-toast or sonner). Create proper context and hooks for showing success, error, and info messages. Integrate the ToastProvider into the ApplicationShell or _app.tsx to make toasts available throughout the application. Create helper functions for common toast patterns.",
+            "status": "done",
+            "testStrategy": "Test toast notifications display properly across different message types (success, error, info), verify toasts appear and dismiss correctly, and confirm they work from any component in the application"
           },
           {
             "id": 5,
-            "title": "Configure log rotation and retention policies",
-            "description": "Set up log rotation, archival, and retention policies to manage log storage and comply with data retention requirements",
+            "title": "Create layout wrapper and export components",
+            "description": "Create a convenient layout wrapper and ensure all components are properly exported",
             "dependencies": [
-              1
+              1,
+              2
             ],
-            "details": "Configure log rotation based on file size and time intervals. Set up log archival to compressed formats or external storage (S3, Azure Blob). Implement retention policies to automatically delete old logs based on age and compliance requirements. Configure log shipping to centralized logging systems if needed. Set up log backup and recovery procedures.",
-            "status": "pending",
-            "testStrategy": "Test log rotation triggers, verify log archival and compression, validate retention policy enforcement, and test log recovery procedures",
-            "parentId": "undefined"
+            "details": "Create a wrapper component or update _app.tsx to use ApplicationShell as the main layout wrapper. Ensure all Relume components (ApplicationShell, PageHeader, Table, GroupedTable) are properly exported from components/ui/index.ts. Create TypeScript types/interfaces for component props if needed. Document component usage patterns.",
+            "status": "done",
+            "testStrategy": "Verify ApplicationShell wraps all pages correctly, confirm all components are accessible via imports, and test that the layout structure works across different pages"
           },
           {
             "id": 6,
             "title": "Run Unit Tests and Verify Build Compilation",
-            "description": "Execute unit tests and verify that the application builds successfully without compilation errors",
-            "dependencies": [
-              5
-            ],
-            "details": "Run all unit tests using the test runner (npm test, jest, vitest, etc.) to ensure all test suites pass. Execute npm run build (or equivalent build command) to verify the application compiles successfully without TypeScript errors, build errors, or warnings. Fix any failing tests or compilation errors. Ensure build output is generated correctly and all assets are properly bundled.",
-            "status": "pending",
-            "testStrategy": "Run npm test to verify all unit tests pass. Run npm run build to verify successful compilation. Check for TypeScript errors, build warnings, and ensure build output directory is created with expected files. Verify no runtime errors in the built application.",
-            "parentId": "undefined"
+            "description": "Execute unit tests and verify the project builds successfully",
+            "dependencies": [],
+            "details": "Run npm test to execute all unit tests and ensure they pass. Run npm run build to verify the project compiles without errors. Fix any test failures or build errors before marking the task as complete.",
+            "status": "done",
+            "testStrategy": "Verify all unit tests pass and the project builds successfully without errors"
           }
         ]
       },
       {
-        "id": "10",
-        "title": "Deploy and Configure Production Environment",
-        "description": "Set up production deployment pipeline and configure hosting environment",
-        "details": "Configure production hosting environment (cloud provider, VPS, or container platform). Set up CI/CD pipeline for automated testing and deployment. Configure environment variables and secrets management. Set up database backups and disaster recovery procedures. Configure SSL certificates and security headers.",
-        "testStrategy": "Test deployment pipeline, verify production environment configuration, test backup and recovery procedures, validate SSL configuration, and perform load testing in production-like environment.",
-        "priority": "medium",
+        "id": 3,
+        "title": "Setup Supabase Database Schema and Data Fetching Hooks",
+        "description": "Define TypeScript interfaces for database entities and create custom hooks for data fetching with loading and error states",
+        "details": "Create types/database.ts with interfaces for People, Businesses, Routes, Memberships, Events tables. Build custom hooks: hooks/usePeople.ts, hooks/useBusinesses.ts, hooks/useRoutes.ts, hooks/useDashboard.ts. Each hook should handle loading states, error states, and provide refetch capabilities. Implement proper error handling for Supabase queries. Create utility functions for data transformations and filtering logic.",
+        "testStrategy": "Test hooks return proper loading states, handle Supabase errors gracefully, and successfully fetch and transform data from each table",
+        "priority": "high",
         "dependencies": [
-          "9"
+          1
         ],
         "status": "pending",
         "subtasks": [
           {
             "id": 1,
-            "title": "Run Unit Tests and Verify Build Compilation",
-            "description": "Execute unit tests and verify that the application builds successfully without compilation errors",
+            "title": "Create TypeScript Database Interfaces",
+            "description": "Define comprehensive TypeScript interfaces for all database entities including People, Businesses, Routes, Memberships, and Events tables",
             "dependencies": [],
-            "details": "Run all unit tests using the test runner (npm test, jest, vitest, etc.) to ensure all test suites pass. Execute npm run build (or equivalent build command) to verify the application compiles successfully without TypeScript errors, build errors, or warnings. Fix any failing tests or compilation errors. Ensure build output is generated correctly and all assets are properly bundled.",
+            "details": "Create types/database.ts file with properly typed interfaces for each Supabase table. Include all necessary fields with correct TypeScript types (string, number, Date, boolean, etc.). Define relationships between entities and optional fields. Ensure interfaces match the actual Supabase schema structure.",
             "status": "pending",
-            "testStrategy": "Run npm test to verify all unit tests pass. Run npm run build to verify successful compilation. Check for TypeScript errors, build warnings, and ensure build output directory is created with expected files. Verify no runtime errors in the built application.",
-            "parentId": "undefined"
+            "testStrategy": "Verify interfaces compile without TypeScript errors and match actual database schema structure"
+          },
+          {
+            "id": 2,
+            "title": "Build usePeople Custom Hook",
+            "description": "Create custom React hook for fetching and managing people data with comprehensive state management",
+            "dependencies": [
+              1
+            ],
+            "details": "Create hooks/usePeople.ts with functions to fetch all people, search by filters, and handle CRUD operations. Implement loading, error, and success states using React state management. Include refetch capability and proper error handling for Supabase queries. Add data transformation utilities for filtering and sorting.",
+            "status": "pending",
+            "testStrategy": "Test hook returns proper loading states, handles Supabase errors gracefully, and successfully fetches people data"
+          },
+          {
+            "id": 3,
+            "title": "Build useBusinesses Custom Hook",
+            "description": "Create custom React hook for fetching and managing business data with state management and error handling",
+            "dependencies": [
+              1
+            ],
+            "details": "Create hooks/useBusinesses.ts with functions to fetch businesses, filter by criteria, and manage business records. Implement loading, error, and data states. Include refetch functionality and proper Supabase error handling. Add utility functions for business data transformations and filtering logic.",
+            "status": "pending",
+            "testStrategy": "Verify hook manages loading states correctly, handles database errors, and successfully retrieves business data"
+          },
+          {
+            "id": 4,
+            "title": "Build useRoutes Custom Hook",
+            "description": "Create custom React hook for fetching and managing route data with comprehensive state handling",
+            "dependencies": [
+              1
+            ],
+            "details": "Create hooks/useRoutes.ts with functions to fetch routes, filter by parameters, and handle route management operations. Implement proper loading, error, and success states. Include refetch capabilities and robust Supabase error handling. Add data transformation utilities for route filtering and sorting.",
+            "status": "pending",
+            "testStrategy": "Test hook properly manages state transitions, handles Supabase connection errors, and fetches route data successfully"
+          },
+          {
+            "id": 5,
+            "title": "Build useDashboard Custom Hook",
+            "description": "Create custom React hook for fetching dashboard metrics and aggregated data from multiple tables",
+            "dependencies": [
+              1
+            ],
+            "details": "Create hooks/useDashboard.ts with functions to fetch membership metrics, revenue data, and dashboard statistics. Aggregate data from memberships, events, and other related tables. Implement loading, error, and data states with refetch capability. Include data transformation utilities for chart formatting and metric calculations.",
+            "status": "pending",
+            "testStrategy": "Verify hook aggregates data correctly from multiple tables, handles complex queries, and provides properly formatted dashboard metrics"
+          },
+          {
+            "id": 6,
+            "title": "Run Unit Tests and Verify Build Compilation",
+            "description": "Execute unit tests and verify the project builds successfully",
+            "dependencies": [],
+            "details": "Run npm test to execute all unit tests and ensure they pass. Run npm run build to verify the project compiles without errors. Fix any test failures or build errors before marking the task as complete.",
+            "status": "pending",
+            "testStrategy": "Verify all unit tests pass and the project builds successfully without errors"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Implement Dashboard Page with Membership Metrics",
+        "description": "Create dashboard page displaying membership metrics widget with revenue charts and monthly breakdown tables",
+        "details": "Create pages/dashboard.tsx with AdminLayout wrapper. Build components/MembershipMetricsWidget.tsx displaying stacked bar chart for monthly revenue (Memberships vs Others) and monthly breakdown table with Total Revenue, Membership Revenue, Other Revenue, New Members, Renewals. Use Chart.js or similar for visualizations. Fetch data using useDashboard hook from memberships table and related revenue data. Implement loading and error states.",
+        "testStrategy": "Verify dashboard loads without errors, charts render correctly with real data, tooltips show detailed breakdowns, and loading/error states display appropriately",
+        "priority": "medium",
+        "dependencies": [
+          2,
+          3
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Dashboard Page Structure with AdminLayout",
+            "description": "Set up the main dashboard page file with proper routing and layout wrapper",
+            "dependencies": [],
+            "details": "Create pages/dashboard.tsx file with AdminLayout wrapper component. Set up proper TypeScript interfaces for dashboard props. Implement basic page structure with proper meta tags and page title. Ensure the page is properly integrated with Next.js routing system.",
+            "status": "pending",
+            "testStrategy": "Verify dashboard page loads without errors, confirm AdminLayout wrapper renders correctly, and validate proper routing functionality"
+          },
+          {
+            "id": 2,
+            "title": "Implement useDashboard Data Hook",
+            "description": "Create custom hook to fetch and manage dashboard data from memberships table and revenue sources",
+            "dependencies": [
+              1
+            ],
+            "details": "Build useDashboard hook to fetch membership data, revenue information, and related metrics. Implement proper error handling and loading states. Structure data for monthly breakdowns including Total Revenue, Membership Revenue, Other Revenue, New Members, and Renewals. Use proper TypeScript typing for all data structures.",
+            "status": "pending",
+            "testStrategy": "Test hook returns correct data structure, verify loading and error states work properly, confirm data fetching handles API failures gracefully"
+          },
+          {
+            "id": 3,
+            "title": "Build MembershipMetricsWidget Component Structure",
+            "description": "Create the main widget component with layout for charts and tables",
+            "dependencies": [
+              2
+            ],
+            "details": "Create components/MembershipMetricsWidget.tsx with proper component structure. Set up layout for stacked bar chart and monthly breakdown table sections. Implement loading and error state displays. Create TypeScript interfaces for widget props and data structures. Ensure responsive design considerations are included.",
+            "status": "pending",
+            "testStrategy": "Verify widget component renders without errors, confirm loading and error states display appropriately, test component accepts proper props"
+          },
+          {
+            "id": 4,
+            "title": "Implement Stacked Bar Chart with Chart.js",
+            "description": "Create interactive stacked bar chart showing monthly revenue breakdown between Memberships and Others",
+            "dependencies": [
+              3
+            ],
+            "details": "Integrate Chart.js library and create stacked bar chart component. Configure chart to display monthly revenue data with two categories: Memberships vs Others. Implement proper tooltips showing detailed breakdowns. Add responsive chart sizing and proper color scheme. Ensure chart updates when data changes.",
+            "status": "pending",
+            "testStrategy": "Verify chart renders correctly with real data, test tooltips show detailed breakdowns, confirm chart is responsive and updates properly when data changes"
+          },
+          {
+            "id": 5,
+            "title": "Create Monthly Breakdown Data Table",
+            "description": "Build comprehensive table displaying monthly metrics including revenue and membership statistics",
+            "dependencies": [
+              3
+            ],
+            "details": "Create monthly breakdown table component showing Total Revenue, Membership Revenue, Other Revenue, New Members, and Renewals columns. Implement proper data formatting for currency and numbers. Add sorting functionality and responsive table design. Include proper loading states for table data.",
+            "status": "pending",
+            "testStrategy": "Verify table displays all required columns with proper formatting, test sorting functionality works correctly, confirm table is responsive on different screen sizes"
+          },
+          {
+            "id": 6,
+            "title": "Run Unit Tests and Verify Build Compilation",
+            "description": "Execute unit tests and verify the project builds successfully",
+            "dependencies": [],
+            "details": "Run npm test to execute all unit tests and ensure they pass. Run npm run build to verify the project compiles without errors. Fix any test failures or build errors before marking the task as complete.",
+            "status": "pending",
+            "testStrategy": "Verify all unit tests pass and the project builds successfully without errors"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Create Neighbors Page with People Management",
+        "description": "Build comprehensive neighbors page with search, filtering, table views, and detail cards for managing community members",
+        "details": "Create pages/people.tsx with three filter tabs: All Neighbors, Members, Duplicates. Implement search functionality filtering by name, email, address. Build Relume Table with columns: Name (with avatar), Email (copyable), Address for All view; add Tier, Last Renewal for Members view; show Email/Person, Memberships count, Tiers for Duplicates. Create detail card sidebar showing person info and membership details. Build Add New Neighbor modal with form fields (name, email, address). Implement CopyableText component for emails. Use usePeople hook with joined membership data.",
+        "testStrategy": "Test search and filtering across all tabs, verify table data displays correctly, confirm detail cards open/close properly, validate form submission creates new records in Supabase, and test email copying functionality",
+        "priority": "medium",
+        "dependencies": [
+          2,
+          3
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create People Page Structure with Filter Tabs",
+            "description": "Build the main people page structure with three filter tabs (All Neighbors, Members, Duplicates) and basic layout components",
+            "dependencies": [],
+            "details": "Create pages/people.tsx with AdminLayout wrapper. Implement FilterTabs component with three tabs: 'All Neighbors', 'Members', and 'Duplicates'. Setup state management for active tab switching. Include basic page structure with search bar placeholder and table container. Ensure proper TypeScript typing for tab states and component props.",
+            "status": "pending",
+            "testStrategy": "Test tab switching functionality, verify correct tab highlighting, ensure page renders without errors in AdminLayout"
+          },
+          {
+            "id": 2,
+            "title": "Implement Search and Filtering Functionality",
+            "description": "Build comprehensive search functionality that filters people by name, email, and address across all tabs",
+            "dependencies": [
+              1
+            ],
+            "details": "Create search input component with real-time filtering capabilities. Implement search logic to filter people data by name, email, and address fields. Setup debounced search to optimize performance. Create search state management and integrate with usePeople hook. Ensure search works consistently across all three filter tabs.",
+            "status": "pending",
+            "testStrategy": "Test search functionality with various inputs, verify filtering works across all tabs, confirm debouncing prevents excessive API calls"
+          },
+          {
+            "id": 3,
+            "title": "Build Dynamic Relume Table with Tab-Specific Columns",
+            "description": "Create responsive table component that displays different column sets based on the active filter tab",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Build Relume Table component with dynamic column configuration. For 'All Neighbors' tab: Name (with avatar), Email (copyable), Address columns. For 'Members' tab: add Tier and Last Renewal columns. For 'Duplicates' tab: show Email/Person, Memberships count, and Tiers columns. Implement CopyableText component for email fields. Integrate with usePeople hook for data fetching with joined membership data.",
+            "status": "pending",
+            "testStrategy": "Verify correct columns display for each tab, test email copying functionality, confirm avatar images load properly, validate data sorting"
+          },
+          {
+            "id": 4,
+            "title": "Create Detail Card Sidebar with Person Information",
+            "description": "Build expandable sidebar component that displays detailed person information and membership details when a table row is selected",
+            "dependencies": [
+              3
+            ],
+            "details": "Create detail card sidebar component that slides in from the right when a person is selected from the table. Display comprehensive person information including name, contact details, address, and membership history. Show membership details with tier information, renewal dates, and status. Implement close functionality and proper state management for selected person. Ensure responsive design for mobile devices.",
+            "status": "pending",
+            "testStrategy": "Test sidebar opening/closing functionality, verify all person data displays correctly, confirm membership details are accurate, test responsive behavior"
+          },
+          {
+            "id": 5,
+            "title": "Implement Add New Neighbor Modal with Form Validation",
+            "description": "Build modal component with form for adding new neighbors including validation and Supabase integration",
+            "dependencies": [
+              1
+            ],
+            "details": "Create Add New Neighbor modal with form fields for name, email, and address. Implement form validation for required fields and email format. Setup form submission handling with Supabase integration to create new person records. Include loading states during submission and success/error toast notifications. Ensure modal can be opened from page header and closes after successful submission.",
+            "status": "pending",
+            "testStrategy": "Test form validation with invalid inputs, verify successful record creation in Supabase, confirm toast notifications display properly, test modal open/close functionality"
+          },
+          {
+            "id": 6,
+            "title": "Run Unit Tests and Verify Build Compilation",
+            "description": "Execute unit tests and verify the project builds successfully",
+            "dependencies": [],
+            "details": "Run npm test to execute all unit tests and ensure they pass. Run npm run build to verify the project compiles without errors. Fix any test failures or build errors before marking the task as complete.",
+            "status": "pending",
+            "testStrategy": "Verify all unit tests pass and the project builds successfully without errors"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Implement Routes Page with Delivery Management",
+        "description": "Create routes page with three-tab view for managing delivery routes and deliverer assignments",
+        "details": "Create pages/routes.tsx with three tabs: By Route (claimed routes), By Deliverer (grouped by deliverer), Open Routes (unassigned). Build Relume Table and GroupedTable components for different views. By Route tab shows Route Name, Leaflets, Dropoff Location, Deliverer. By Deliverer tab groups routes by deliverer with expandable rows. Open Routes shows unassigned routes with Assign buttons (placeholder). Create detail card for route information including deliverer details, route type, and status. Use useRoutes hook with joined deliverer data from people table.",
+        "testStrategy": "Verify all three tabs display correct data, test search functionality, confirm grouped table expands/collapses properly, validate detail cards show complete route and deliverer information",
+        "priority": "medium",
+        "dependencies": [
+          2,
+          3
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Routes Page Structure with Three-Tab Layout",
+            "description": "Set up the main routes page with three distinct tabs for different route views",
+            "dependencies": [],
+            "details": "Create pages/routes.tsx with AdminLayout wrapper. Implement tab navigation with three tabs: 'By Route', 'By Deliverer', and 'Open Routes'. Set up state management for active tab switching and ensure proper styling with Relume design system.",
+            "status": "pending",
+            "testStrategy": "Verify all three tabs are clickable and switch content properly, confirm tab styling matches design system"
+          },
+          {
+            "id": 2,
+            "title": "Build Relume Table Component for Route Display",
+            "description": "Create reusable table component for displaying route data in structured format",
+            "dependencies": [
+              1
+            ],
+            "details": "Build components/RelumeTable.tsx with columns for Route Name, Leaflets, Dropoff Location, and Deliverer. Implement sorting, filtering, and search functionality. Ensure responsive design and proper TypeScript typing for route data structure.",
+            "status": "pending",
+            "testStrategy": "Test table sorting and filtering functionality, verify responsive behavior on different screen sizes"
+          },
+          {
+            "id": 3,
+            "title": "Implement GroupedTable Component for Deliverer View",
+            "description": "Create expandable grouped table component for organizing routes by deliverer",
+            "dependencies": [
+              2
+            ],
+            "details": "Build components/GroupedTable.tsx with expandable rows grouped by deliverer. Implement expand/collapse functionality with proper state management. Show deliverer summary in header row and route details in expanded rows.",
+            "status": "pending",
+            "testStrategy": "Verify expand/collapse functionality works correctly, test that grouped data displays properly with accurate counts"
+          },
+          {
+            "id": 4,
+            "title": "Create Route Detail Card Component",
+            "description": "Build detailed information card component for displaying comprehensive route and deliverer data",
+            "dependencies": [
+              1
+            ],
+            "details": "Create components/RouteDetailCard.tsx showing deliverer details, route type, status, and other relevant information. Include proper styling with Relume design system and ensure card can be used across different contexts.",
+            "status": "pending",
+            "testStrategy": "Confirm detail cards display complete route and deliverer information accurately, verify styling consistency"
+          },
+          {
+            "id": 5,
+            "title": "Integrate useRoutes Hook and Implement Tab Content Logic",
+            "description": "Connect data layer with UI components and implement specific logic for each tab view",
+            "dependencies": [
+              2,
+              3,
+              4
+            ],
+            "details": "Implement useRoutes hook integration with joined deliverer data from people table. Set up tab-specific filtering logic: By Route shows claimed routes, By Deliverer groups by deliverer, Open Routes shows unassigned routes with placeholder Assign buttons. Handle loading and error states.",
+            "status": "pending",
+            "testStrategy": "Verify all three tabs display correct filtered data, test search functionality across tabs, confirm loading and error states work properly"
+          },
+          {
+            "id": 6,
+            "title": "Run Unit Tests and Verify Build Compilation",
+            "description": "Execute unit tests and verify the project builds successfully",
+            "dependencies": [],
+            "details": "Run npm test to execute all unit tests and ensure they pass. Run npm run build to verify the project compiles without errors. Fix any test failures or build errors before marking the task as complete.",
+            "status": "pending",
+            "testStrategy": "Verify all unit tests pass and the project builds successfully without errors"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Build Businesses Page with Sponsor Management",
+        "description": "Create businesses page for managing business sponsors with filtering, search, and detailed business profiles",
+        "details": "Create pages/businesses.tsx with four filter tabs: All Businesses, Active Members, Past Sponsors, Yet to Support. Implement search by company name, contact name, linked events. Build Relume Table with columns: Company Name, Contact Name, Email, Phone, Address, Sponsorship Tags, Linked Events, Status. Create detail card sidebar showing complete business profile including sponsorship history, tags (Gold, Silver, Bronze, In-Kind), linked events, member since date, lifetime sponsorship amount. Build Add New Business modal with form fields. Use useBusinesses hook for data fetching.",
+        "testStrategy": "Test filtering by business status, verify search across multiple fields, confirm detail cards display complete business information including sponsorship history, validate new business creation form",
+        "priority": "medium",
+        "dependencies": [
+          2,
+          3
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create businesses page structure with filter tabs",
+            "description": "Create the main businesses page with four filter tabs: All Businesses, Active Members, Past Sponsors, Yet to Support",
+            "dependencies": [],
+            "details": "Create pages/businesses.tsx with AdminLayout wrapper. Implement FilterTabs component with four tabs: All Businesses, Active Members, Past Sponsors, Yet to Support. Each tab should have badge counts showing number of businesses in each category. Setup state management for active tab selection and filtering logic.",
+            "status": "pending",
+            "testStrategy": "Test tab switching functionality, verify badge counts update correctly, confirm filtering works for each business category"
+          },
+          {
+            "id": 2,
+            "title": "Implement search functionality for businesses",
+            "description": "Build comprehensive search functionality that allows searching by company name, contact name, and linked events",
+            "dependencies": [
+              1
+            ],
+            "details": "Add search input component to the businesses page header. Implement search logic that filters businesses by company name, contact name, and linked events. Use debounced search to improve performance. Integrate with useBusinesses hook to fetch filtered results from the backend.",
+            "status": "pending",
+            "testStrategy": "Test search across all specified fields, verify debounced search reduces API calls, confirm search results update in real-time"
+          },
+          {
+            "id": 3,
+            "title": "Build Relume Table with business data columns",
+            "description": "Create the main data table displaying businesses with all required columns and proper formatting",
+            "dependencies": [
+              2
+            ],
+            "details": "Implement Relume Table component with columns: Company Name, Contact Name, Email, Phone, Address, Sponsorship Tags, Linked Events, Status. Add proper column sorting, row selection, and responsive design. Format sponsorship tags with color-coded badges (Gold, Silver, Bronze, In-Kind). Make table rows clickable to open detail sidebar.",
+            "status": "pending",
+            "testStrategy": "Test table sorting functionality, verify all columns display correctly, confirm row selection and click handlers work properly"
+          },
+          {
+            "id": 4,
+            "title": "Create business detail sidebar with complete profile",
+            "description": "Build detailed business profile sidebar showing sponsorship history, tags, events, and financial information",
+            "dependencies": [
+              3
+            ],
+            "details": "Create detail card sidebar component that displays complete business profile including: sponsorship history timeline, sponsorship tags with visual indicators, linked events list, member since date, lifetime sponsorship amount, contact information, and address. Implement slide-out animation and close functionality. Fetch detailed data when business is selected.",
+            "status": "pending",
+            "testStrategy": "Test sidebar opens with correct business data, verify all profile information displays accurately, confirm sponsorship history and financial calculations are correct"
+          },
+          {
+            "id": 5,
+            "title": "Build Add New Business modal with form validation",
+            "description": "Create modal form for adding new businesses with proper validation and integration with useBusinesses hook",
+            "dependencies": [
+              4
+            ],
+            "details": "Build Add New Business modal with form fields for company name, contact information, address, initial sponsorship level, and tags. Implement form validation using proper validation library. Add file upload for business logo. Integrate with useBusinesses hook for creating new business records. Include success/error toast notifications.",
+            "status": "pending",
+            "testStrategy": "Test form validation for all required fields, verify new business creation updates the table, confirm file upload works correctly, validate toast notifications appear"
+          },
+          {
+            "id": 6,
+            "title": "Run Unit Tests and Verify Build Compilation",
+            "description": "Execute unit tests and verify the project builds successfully",
+            "dependencies": [],
+            "details": "Run npm test to execute all unit tests and ensure they pass. Run npm run build to verify the project compiles without errors. Fix any test failures or build errors before marking the task as complete.",
+            "status": "pending",
+            "testStrategy": "Verify all unit tests pass and the project builds successfully without errors"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Create Events Page Placeholder and Home Redirect",
+        "description": "Implement events page placeholder with coming soon content and setup home page redirect to neighbors",
+        "details": "Create pages/events.tsx with AdminLayout showing placeholder content: 'Events coming soon' message, description about campaign planning tools, sample events list with event name/date/location/attendees/volunteers, placeholder buttons for 'Plan New Event' and 'Connect Calendar'. Create pages/index.tsx with getServerSideProps redirect to '/people'. Ensure proper TypeScript typing for redirect response.",
+        "testStrategy": "Verify events page displays placeholder content correctly, confirm home page redirects to /people without errors, test placeholder buttons are non-functional but styled properly",
+        "priority": "low",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Events Page Component Structure",
+            "description": "Create the basic events page component with AdminLayout wrapper and TypeScript setup",
+            "dependencies": [],
+            "details": "Create pages/events.tsx file with proper imports for AdminLayout component. Set up the basic page structure with TypeScript interface definitions for the events page props and component state. Import necessary dependencies from React and Next.js.",
+            "status": "pending",
+            "testStrategy": "Verify the events page renders without errors and uses AdminLayout correctly"
+          },
+          {
+            "id": 2,
+            "title": "Implement Events Page Placeholder Content",
+            "description": "Add the coming soon message, description, and sample events list to the events page",
+            "dependencies": [
+              1
+            ],
+            "details": "Add 'Events coming soon' heading, description about campaign planning tools, and create a sample events list displaying event name, date, location, attendees count, and volunteers count. Use proper styling and layout components to match the design system.",
+            "status": "pending",
+            "testStrategy": "Confirm all placeholder content displays correctly with proper formatting and styling"
+          },
+          {
+            "id": 3,
+            "title": "Add Placeholder Action Buttons",
+            "description": "Create non-functional placeholder buttons for 'Plan New Event' and 'Connect Calendar'",
+            "dependencies": [
+              2
+            ],
+            "details": "Implement 'Plan New Event' and 'Connect Calendar' buttons using Relume Button components. Ensure buttons are styled properly but non-functional (no onClick handlers). Position buttons appropriately within the page layout.",
+            "status": "pending",
+            "testStrategy": "Test that placeholder buttons are visible, properly styled, and non-functional as expected"
+          },
+          {
+            "id": 4,
+            "title": "Create Home Page Redirect Component",
+            "description": "Implement the home page index.tsx with server-side redirect to /people",
+            "dependencies": [],
+            "details": "Create pages/index.tsx with getServerSideProps function that returns a redirect object pointing to '/people'. Ensure proper TypeScript typing for the GetServerSidePropsResult with redirect response structure.",
+            "status": "pending",
+            "testStrategy": "Verify that accessing the home page (/) automatically redirects to /people without errors"
+          },
+          {
+            "id": 5,
+            "title": "Test Integration and TypeScript Compliance",
+            "description": "Perform comprehensive testing of both pages and ensure TypeScript compliance",
+            "dependencies": [
+              3,
+              4
+            ],
+            "details": "Run TypeScript compilation checks for both pages/events.tsx and pages/index.tsx. Test the complete user flow from home page redirect to events page navigation. Verify all components integrate properly with the existing AdminLayout and navigation system.",
+            "status": "pending",
+            "testStrategy": "Execute full integration tests including TypeScript compilation, redirect functionality, and events page placeholder content display"
+          },
+          {
+            "id": 6,
+            "title": "Run Unit Tests and Verify Build Compilation",
+            "description": "Execute unit tests and verify the project builds successfully",
+            "dependencies": [],
+            "details": "Run npm test to execute all unit tests and ensure they pass. Run npm run build to verify the project compiles without errors. Fix any test failures or build errors before marking the task as complete.",
+            "status": "pending",
+            "testStrategy": "Verify all unit tests pass and the project builds successfully without errors"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Implement Common UI Components and Utilities",
+        "description": "Build reusable UI components including modals, badges, copyable text, and utility functions for consistent user experience",
+        "details": "Create components/Modal.tsx for forms and detail cards with proper focus management and ESC key handling. Build components/Badge.tsx for status indicators with different color variants. Create components/CopyableText.tsx with click-to-copy functionality and toast feedback. Build utility functions for data formatting, filtering, and search logic. Create components/LoadingSpinner.tsx and components/ErrorMessage.tsx for consistent loading and error states. Ensure all components use Relume design system where applicable.",
+        "testStrategy": "Test modal open/close behavior and focus management, verify badge colors match design system, confirm copy functionality works with toast notifications, validate loading and error components display consistently across pages",
+        "priority": "medium",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Modal Component with Focus Management",
+            "description": "Build a reusable Modal component with proper accessibility features and keyboard handling",
+            "dependencies": [],
+            "details": "Create components/Modal.tsx with proper focus management, ESC key handling, backdrop click to close, and ARIA attributes. Include props for title, children, onClose callback, and size variants. Implement focus trap to keep keyboard navigation within modal. Use Relume design system styling for consistent appearance.",
+            "status": "pending",
+            "testStrategy": "Test modal open/close behavior, verify ESC key closes modal, confirm focus is trapped within modal, test backdrop click functionality, and validate ARIA attributes for accessibility"
+          },
+          {
+            "id": 2,
+            "title": "Build Badge Component with Color Variants",
+            "description": "Create a Badge component for status indicators with multiple color schemes",
+            "dependencies": [],
+            "details": "Create components/Badge.tsx with different color variants (success, warning, error, info, neutral). Include size variants (small, medium, large) and support for custom text. Use Relume design system colors and ensure proper contrast ratios. Make component flexible to accept custom className overrides.",
+            "status": "pending",
+            "testStrategy": "Verify all color variants render correctly, test different sizes display properly, confirm colors match design system specifications, and validate contrast ratios meet accessibility standards"
+          },
+          {
+            "id": 3,
+            "title": "Implement CopyableText Component with Toast Feedback",
+            "description": "Build a component that allows users to copy text with visual feedback",
+            "dependencies": [],
+            "details": "Create components/CopyableText.tsx with click-to-copy functionality using navigator.clipboard API. Include toast notification feedback on successful copy. Add copy icon that appears on hover. Handle fallback for browsers without clipboard API support. Style with Relume design system and include loading state during copy operation.",
+            "status": "pending",
+            "testStrategy": "Test copy functionality works across different browsers, verify toast notifications appear and disappear correctly, confirm fallback works when clipboard API unavailable, and validate hover states display properly"
+          },
+          {
+            "id": 4,
+            "title": "Create Loading and Error State Components",
+            "description": "Build consistent loading spinner and error message components for application-wide use",
+            "dependencies": [],
+            "details": "Create components/LoadingSpinner.tsx with different size variants and optional text. Build components/ErrorMessage.tsx with retry functionality, custom error messages, and proper error styling. Both components should use Relume design system. Include props for customization while maintaining consistency across the application.",
+            "status": "pending",
+            "testStrategy": "Verify loading spinner animates smoothly, test different size variants display correctly, confirm error messages show appropriate content, and validate retry functionality triggers callbacks properly"
+          },
+          {
+            "id": 5,
+            "title": "Build Utility Functions for Data Operations",
+            "description": "Create utility functions for data formatting, filtering, and search operations",
+            "dependencies": [],
+            "details": "Create utils/dataUtils.ts with functions for date formatting, currency formatting, text truncation, and data validation. Build utils/searchUtils.ts with fuzzy search, filtering, and sorting functions. Include utils/formatters.ts for consistent data display formatting. Ensure all functions are properly typed with TypeScript and include JSDoc comments for documentation.",
+            "status": "pending",
+            "testStrategy": "Test all formatting functions with various input types, verify search functions return accurate results, confirm filtering works with different data structures, and validate edge cases handle gracefully"
+          },
+          {
+            "id": 6,
+            "title": "Run Unit Tests and Verify Build Compilation",
+            "description": "Execute unit tests and verify the project builds successfully",
+            "dependencies": [],
+            "details": "Run npm test to execute all unit tests and ensure they pass. Run npm run build to verify the project compiles without errors. Fix any test failures or build errors before marking the task as complete.",
+            "status": "pending",
+            "testStrategy": "Verify all unit tests pass and the project builds successfully without errors"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Add Responsive Design and Final Polish",
+        "description": "Ensure responsive design across all pages, implement proper error handling, and add final UI polish for production readiness",
+        "details": "Implement responsive breakpoints for mobile, tablet, and desktop views. Ensure tables are horizontally scrollable on mobile. Add proper loading skeletons for better perceived performance. Implement comprehensive error boundaries and fallback UI. Add proper ARIA labels and keyboard navigation support. Optimize Tailwind CSS bundle size by purging unused styles. Add proper meta tags and page titles. Test cross-browser compatibility. Implement proper TypeScript strict mode compliance.",
+        "testStrategy": "Test responsive behavior on different screen sizes, verify accessibility with screen readers, confirm error boundaries catch and display errors properly, validate loading states provide good user feedback, test keyboard navigation throughout the application",
+        "priority": "medium",
+        "dependencies": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Responsive Design System with Breakpoints",
+            "description": "Create responsive design system with mobile, tablet, and desktop breakpoints across all pages",
+            "dependencies": [],
+            "details": "Implement responsive breakpoints using Tailwind CSS classes (sm:, md:, lg:, xl:) across all pages including dashboard, people, routes, and events. Ensure tables are horizontally scrollable on mobile devices using overflow-x-auto. Update navigation components to collapse appropriately on smaller screens. Test layout behavior at common breakpoints: 320px (mobile), 768px (tablet), 1024px (desktop), and 1440px (large desktop).",
+            "status": "pending",
+            "testStrategy": "Test responsive behavior on different screen sizes using browser dev tools, verify horizontal scrolling works on mobile tables, confirm navigation adapts properly to screen size"
+          },
+          {
+            "id": 2,
+            "title": "Add Loading Skeletons and Performance Optimizations",
+            "description": "Implement loading skeletons and optimize Tailwind CSS bundle for better performance",
+            "dependencies": [
+              1
+            ],
+            "details": "Create skeleton components for tables, cards, and charts to improve perceived performance during data loading. Implement skeleton states in dashboard metrics, people table, and routes views. Configure Tailwind CSS purging to remove unused styles and optimize bundle size. Add proper loading states with shimmer effects using Tailwind animations. Ensure skeletons match the actual content layout dimensions.",
+            "status": "pending",
+            "testStrategy": "Verify loading skeletons display before data loads, confirm Tailwind bundle size is optimized, test loading states provide good user feedback across all pages"
+          },
+          {
+            "id": 3,
+            "title": "Implement Error Boundaries and Fallback UI",
+            "description": "Create comprehensive error handling with error boundaries and fallback components",
+            "dependencies": [],
+            "details": "Implement React Error Boundary components to catch JavaScript errors in component tree. Create fallback UI components for different error scenarios (network errors, data loading failures, component crashes). Add error boundaries around major page sections and data-heavy components like charts and tables. Implement retry mechanisms and user-friendly error messages. Ensure errors are logged appropriately for debugging.",
+            "status": "pending",
+            "testStrategy": "Test error boundaries catch and display errors properly, verify fallback UI shows appropriate messages, confirm retry mechanisms work correctly, validate error logging functionality"
+          },
+          {
+            "id": 4,
+            "title": "Add Accessibility Features and ARIA Support",
+            "description": "Implement ARIA labels, keyboard navigation, and accessibility compliance across all components",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Add proper ARIA labels to all interactive elements, tables, and form controls. Implement keyboard navigation support with proper tab order and focus management. Ensure all modals trap focus and can be closed with ESC key. Add screen reader support with descriptive labels and announcements. Implement proper heading hierarchy and semantic HTML structure. Add skip links for main content navigation.",
+            "status": "pending",
+            "testStrategy": "Test accessibility with screen readers, verify keyboard navigation works throughout application, confirm ARIA labels provide meaningful descriptions, validate focus management in modals"
+          },
+          {
+            "id": 5,
+            "title": "Final Production Polish and Cross-Browser Testing",
+            "description": "Add meta tags, page titles, TypeScript strict mode, and perform cross-browser compatibility testing",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "details": "Add proper meta tags for SEO and social sharing to all pages. Implement dynamic page titles based on current route and content. Enable TypeScript strict mode and fix all type errors for better code quality. Add favicon and app icons. Perform cross-browser testing on Chrome, Firefox, Safari, and Edge. Optimize final bundle size and ensure proper caching headers. Add proper 404 and error pages.",
+            "status": "pending",
+            "testStrategy": "Test cross-browser compatibility on major browsers, verify meta tags and page titles are correct, confirm TypeScript strict mode compliance, validate final bundle optimization and caching"
+          },
+          {
+            "id": 6,
+            "title": "Run Unit Tests and Verify Build Compilation",
+            "description": "Execute unit tests and verify the project builds successfully",
+            "dependencies": [],
+            "details": "Run npm test to execute all unit tests and ensure they pass. Run npm run build to verify the project compiles without errors. Fix any test failures or build errors before marking the task as complete.",
+            "status": "pending",
+            "testStrategy": "Verify all unit tests pass and the project builds successfully without errors"
           }
         ]
       }
     ],
     "metadata": {
-      "version": "1.0.0",
-      "lastModified": "2026-01-26T02:16:06.423Z",
-      "taskCount": 10,
-      "completedCount": 2,
-      "tags": [
-        "master"
-      ]
+      "created": "2026-01-26T02:43:16.137Z",
+      "updated": "2026-01-26T02:43:16.138Z",
+      "description": "Tasks for master context"
     }
   }
 }
