@@ -2,7 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
-import type { Routes, RoutesInsert, RoutesUpdate } from "@/types/database";
+import type { Routes, RoutesInsert, RoutesUpdate, People } from "@/types/database";
+
+export interface RouteWithDeliverer extends Routes {
+  primary_deliverer?: People | null;
+  secondary_deliverer?: People | null;
+}
 
 interface UseRoutesOptions {
   autoFetch?: boolean;
@@ -11,11 +16,12 @@ interface UseRoutesOptions {
     delivererId?: string;
     routeType?: string;
     isSkipped?: boolean;
+    hasDeliverer?: boolean; // true = has deliverer, false = no deliverer
   };
 }
 
 interface UseRoutesReturn {
-  routes: Routes[];
+  routes: RouteWithDeliverer[];
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
@@ -26,7 +32,7 @@ interface UseRoutesReturn {
 
 export function useRoutes(options: UseRoutesOptions = {}): UseRoutesReturn {
   const { autoFetch = true, filters = {} } = options;
-  const [routes, setRoutes] = useState<Routes[]>([]);
+  const [routes, setRoutes] = useState<RouteWithDeliverer[]>([]);
   const [loading, setLoading] = useState<boolean>(autoFetch);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,6 +58,15 @@ export function useRoutes(options: UseRoutesOptions = {}): UseRoutesReturn {
         );
       }
 
+      // Filter by whether route has a deliverer
+      if (filters.hasDeliverer !== undefined) {
+        if (filters.hasDeliverer) {
+          query = query.not("primary_deliverer_id", "is", null);
+        } else {
+          query = query.is("primary_deliverer_id", null);
+        }
+      }
+
       // Apply route type filter
       if (filters.routeType) {
         query = query.eq("route_type", filters.routeType);
@@ -62,7 +77,7 @@ export function useRoutes(options: UseRoutesOptions = {}): UseRoutesReturn {
         query = query.eq("is_skipped", filters.isSkipped);
       }
 
-      const { data, error: queryError } = await query.order("route_name", {
+      const { data: routesData, error: queryError } = await query.order("route_name", {
         ascending: true,
       });
 
@@ -70,7 +85,44 @@ export function useRoutes(options: UseRoutesOptions = {}): UseRoutesReturn {
         throw queryError;
       }
 
-      setRoutes(data || []);
+      // Fetch deliverer data separately and join
+      const delivererIds = new Set<string>();
+      (routesData || []).forEach((route) => {
+        if (route.primary_deliverer_id) delivererIds.add(route.primary_deliverer_id);
+        if (route.secondary_deliverer_id) delivererIds.add(route.secondary_deliverer_id);
+      });
+
+      let deliverersMap = new Map<string, People>();
+
+      if (delivererIds.size > 0) {
+        try {
+          const { data: deliverersData, error: deliverersError } = await supabaseClient
+            .from("people")
+            .select("*")
+            .in("id", Array.from(delivererIds));
+
+          if (deliverersError) {
+            console.warn("Error fetching deliverers:", deliverersError);
+          } else if (deliverersData) {
+            deliverersMap = new Map(deliverersData.map((p) => [p.id, p]));
+          }
+        } catch (delivererErr) {
+          console.warn("Error fetching deliverers:", delivererErr);
+        }
+      }
+
+      // Transform data to include deliverer information
+      const transformedData: RouteWithDeliverer[] = (routesData || []).map((route) => ({
+        ...route,
+        primary_deliverer: route.primary_deliverer_id
+          ? deliverersMap.get(route.primary_deliverer_id) || null
+          : null,
+        secondary_deliverer: route.secondary_deliverer_id
+          ? deliverersMap.get(route.secondary_deliverer_id) || null
+          : null,
+      }));
+
+      setRoutes(transformedData);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to fetch routes";
       setError(errorMessage);
@@ -78,7 +130,7 @@ export function useRoutes(options: UseRoutesOptions = {}): UseRoutesReturn {
     } finally {
       setLoading(false);
     }
-  }, [filters.search, filters.delivererId, filters.routeType, filters.isSkipped]);
+  }, [filters.search, filters.delivererId, filters.routeType, filters.isSkipped, filters.hasDeliverer]);
 
   const create = useCallback(async (data: RoutesInsert): Promise<Routes | null> => {
     try {

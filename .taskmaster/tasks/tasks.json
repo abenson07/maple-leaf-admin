@@ -392,7 +392,7 @@
           2,
           3
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -400,7 +400,7 @@
             "description": "Set up the main routes page with three distinct tabs for different route views",
             "dependencies": [],
             "details": "Create pages/routes.tsx with AdminLayout wrapper. Implement tab navigation with three tabs: 'By Route', 'By Deliverer', and 'Open Routes'. Set up state management for active tab switching and ensure proper styling with Relume design system.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify all three tabs are clickable and switch content properly, confirm tab styling matches design system"
           },
           {
@@ -411,7 +411,7 @@
               1
             ],
             "details": "Build components/RelumeTable.tsx with columns for Route Name, Leaflets, Dropoff Location, and Deliverer. Implement sorting, filtering, and search functionality. Ensure responsive design and proper TypeScript typing for route data structure.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test table sorting and filtering functionality, verify responsive behavior on different screen sizes"
           },
           {
@@ -422,7 +422,7 @@
               2
             ],
             "details": "Build components/GroupedTable.tsx with expandable rows grouped by deliverer. Implement expand/collapse functionality with proper state management. Show deliverer summary in header row and route details in expanded rows.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify expand/collapse functionality works correctly, test that grouped data displays properly with accurate counts"
           },
           {
@@ -433,7 +433,7 @@
               1
             ],
             "details": "Create components/RouteDetailCard.tsx showing deliverer details, route type, status, and other relevant information. Include proper styling with Relume design system and ensure card can be used across different contexts.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Confirm detail cards display complete route and deliverer information accurately, verify styling consistency"
           },
           {
@@ -446,7 +446,7 @@
               4
             ],
             "details": "Implement useRoutes hook integration with joined deliverer data from people table. Set up tab-specific filtering logic: By Route shows claimed routes, By Deliverer groups by deliverer, Open Routes shows unassigned routes with placeholder Assign buttons. Handle loading and error states.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify all three tabs display correct filtered data, test search functionality across tabs, confirm loading and error states work properly"
           },
           {
@@ -455,7 +455,7 @@
             "description": "Execute unit tests and verify the project builds successfully",
             "dependencies": [],
             "details": "Run npm test to execute all unit tests and ensure they pass. Run npm run build to verify the project compiles without errors. Fix any test failures or build errors before marking the task as complete.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify all unit tests pass and the project builds successfully without errors"
           }
         ]
