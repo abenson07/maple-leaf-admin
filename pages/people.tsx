@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import Head from "next/head";
 import { PageHeader1 } from "@/components/ui";
 import { FilterTabs, useFilterTabs } from "@/components/ui";
 import { usePeople, PersonWithMembership } from "@/hooks";
@@ -8,6 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Button, 
 import { BiSearch, BiPlus, BiUser, BiX } from "react-icons/bi";
 import { CopyableText } from "@/components/CopyableText";
 import { Modal } from "@/components/Modal";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { ErrorMessage } from "@/components/ErrorMessage";
+import { TableSkeleton } from "@/components/skeletons";
 import { showToast } from "@/lib/toast";
 import type { PeopleInsert } from "@/types/database";
 
@@ -139,8 +143,12 @@ export default function PeoplePage() {
   };
 
   return (
-    <div>
-      <PageHeader1
+    <>
+      <Head>
+        <title>Neighbors | MLCC Admin</title>
+      </Head>
+      <div>
+        <PageHeader1
         breadcrumbs={[{ url: "/", title: "Home" }, { url: "/people", title: "Neighbors" }]}
         heading="Neighbors"
         description="Manage community members and their memberships"
@@ -158,7 +166,7 @@ export default function PeoplePage() {
         ]}
       />
 
-      <div className="container mx-auto px-6 pb-8 md:px-8">
+      <div className="container mx-auto px-4 pb-8 sm:px-6 md:px-8">
 
         {/* Filter Tabs */}
         <FilterTabs
@@ -174,21 +182,23 @@ export default function PeoplePage() {
 
         {/* Loading State */}
         {loading && (
-          <div className="flex items-center justify-center py-12">
-            <div className="text-text-secondary">Loading...</div>
+          <div className="py-12">
+            <TableSkeleton rows={5} columns={3} />
           </div>
         )}
 
         {/* Error State */}
         {error && (
-          <div className="rounded-lg bg-error/10 p-4 text-error">
-            Error: {error}
-          </div>
+          <ErrorMessage
+            message={error}
+            onRetry={refetch}
+            className="my-8"
+          />
         )}
 
         {/* Table */}
         {!loading && !error && (
-          <div className="rounded-lg border border-border-primary">
+          <div className="overflow-x-auto rounded-lg border border-border-primary">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -428,6 +438,7 @@ export default function PeoplePage() {
           </div>
         </div>
       </Modal>
-    </div>
+      </div>
+    </>
   );
 }

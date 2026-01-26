@@ -1,9 +1,12 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import Head from "next/head";
 import { PageHeader1 } from "@/components/ui";
 import { FilterTabs, useFilterTabs } from "@/components/ui";
 import { useBusinesses, BusinessWithDetails } from "@/hooks";
+import { ErrorMessage } from "@/components/ErrorMessage";
+import { TableSkeleton } from "@/components/skeletons";
 import {
   Table,
   TableBody,
@@ -157,12 +160,16 @@ export default function BusinessesPage() {
   };
 
   return (
-    <div>
-      <PageHeader1
+    <>
+      <Head>
+        <title>Businesses | MLCC Admin</title>
+      </Head>
+      <div>
+        <PageHeader1
         breadcrumbs={[{ url: "/", title: "Home" }, { url: "/businesses", title: "Businesses" }]}
         heading="Businesses"
         description="Manage business sponsors and their memberships"
-        inputPlaceholder="Search by company name, contact name, or events..."
+        inputPlaceholder="Search by company name or contact name..."
         inputIcon={<BiSearch />}
         inputValue={searchQuery}
         onInputChange={setSearchQuery}
@@ -176,7 +183,7 @@ export default function BusinessesPage() {
         ]}
       />
 
-      <div className="container mx-auto px-6 pb-8 md:px-8">
+      <div className="container mx-auto px-4 pb-8 sm:px-6 md:px-8">
         {/* Filter Tabs */}
         <FilterTabs
           tabs={[
@@ -192,19 +199,23 @@ export default function BusinessesPage() {
 
         {/* Loading State */}
         {loading && (
-          <div className="flex items-center justify-center py-12">
-            <div className="text-text-secondary">Loading businesses...</div>
+          <div className="py-12">
+            <TableSkeleton rows={5} columns={8} />
           </div>
         )}
 
         {/* Error State */}
         {error && (
-          <div className="rounded-lg bg-error/10 p-4 text-error">Error: {error}</div>
+          <ErrorMessage
+            message={error}
+            onRetry={refetch}
+            className="my-8"
+          />
         )}
 
         {/* Table */}
         {!loading && !error && (
-          <div className="rounded-lg border border-border-primary">
+          <div className="overflow-x-auto rounded-lg border border-border-primary">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -214,21 +225,19 @@ export default function BusinessesPage() {
                   <TableHead>Phone</TableHead>
                   <TableHead>Address</TableHead>
                   <TableHead>Sponsorship Tags</TableHead>
-                  <TableHead>Linked Events</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {businesses.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-text-secondary">
+                    <TableCell colSpan={7} className="text-center py-8 text-text-secondary">
                       No businesses found
                     </TableCell>
                   </TableRow>
                 ) : (
                   businesses.map((business) => {
                     const tags = getSponsorshipTags(business);
-                    const linkedEvents = business.linkedEvents || [];
                     const status =
                       business.membership?.status === "active" ? "Active" : "Inactive";
 
@@ -275,15 +284,6 @@ export default function BusinessesPage() {
                               <span className="text-text-secondary">—</span>
                             )}
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          {linkedEvents.length > 0 ? (
-                            <div className="text-sm">
-                              {linkedEvents.map((e) => e.name).join(", ")}
-                            </div>
-                          ) : (
-                            <span className="text-text-secondary">—</span>
-                          )}
                         </TableCell>
                         <TableCell>
                           <Badge
@@ -413,18 +413,12 @@ export default function BusinessesPage() {
                     <h3 className="mb-3 text-lg font-semibold">Sponsorship History</h3>
                     <div className="space-y-3">
                       {selectedBusiness.sponsorships.map((sponsorship, index) => {
-                        const event = selectedBusiness.linkedEvents?.find(
-                          (e) => e.id === sponsorship.event_id
-                        );
                         return (
                           <div key={index} className="rounded-lg border border-border-primary p-3">
                             <div className="flex justify-between items-start mb-2">
                               <div>
-                                <div className="font-medium">
-                                  {event?.name || "Event"}
-                                </div>
                                 {sponsorship.amount && (
-                                  <div className="text-sm text-text-secondary">
+                                  <div className="font-medium">
                                     {formatCurrency(sponsorship.amount)}
                                   </div>
                                 )}
@@ -553,6 +547,7 @@ export default function BusinessesPage() {
           </div>
         </div>
       </Modal>
-    </div>
+      </div>
+    </>
   );
 }

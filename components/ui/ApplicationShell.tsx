@@ -32,7 +32,6 @@ import {
   BiSearch,
   BiUser,
 } from "react-icons/bi";
-import { BiCalendarEvent } from "react-icons/bi";
 import { RxChevronRight, RxCross2 } from "react-icons/rx";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -44,7 +43,6 @@ const menuItems = [
   { title: "Neighbors", url: "/people", icon: BiUser },
   { title: "Routes", url: "/routes", icon: BiMap },
   { title: "Businesses", url: "/businesses", icon: BiBuilding },
-  { title: "Events", url: "/events", icon: BiCalendarEvent },
 ];
 
 const footerItems = [

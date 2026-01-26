@@ -7,13 +7,11 @@ import type {
   BusinessesInsert,
   BusinessesUpdate,
   Sponsorships,
-  Events,
   BusinessMemberships,
 } from "@/types/database";
 
 export interface BusinessWithDetails extends Businesses {
   sponsorships?: Sponsorships[];
-  linkedEvents?: Events[];
   membership?: BusinessMemberships | null;
 }
 
@@ -70,11 +68,10 @@ export function useBusinesses(options: UseBusinessesOptions = {}): UseBusinesses
         throw queryError;
       }
 
-      // Fetch sponsorships and events separately
+      // Fetch sponsorships separately
       const businessIds = (businessesData || []).map((b) => b.id);
 
       let sponsorshipsMap = new Map<string, Sponsorships[]>();
-      let eventsMap = new Map<string, Events>();
       let membershipsMap = new Map<string, BusinessMemberships>();
 
       if (businessIds.length > 0) {
@@ -94,26 +91,6 @@ export function useBusinesses(options: UseBusinessesOptions = {}): UseBusinesses
                 sponsorshipsMap.get(sponsorship.business_id)!.push(sponsorship);
               }
             });
-          }
-
-          // Fetch event IDs from sponsorships
-          const eventIds = Array.from(
-            new Set(
-              sponsorshipsData
-                ?.map((s) => s.event_id)
-                .filter((id): id is string => id !== null && id !== undefined) || []
-            )
-          );
-
-          if (eventIds.length > 0) {
-            const { data: eventsData, error: eventsError } = await supabaseClient
-              .from("events")
-              .select("*")
-              .in("id", eventIds);
-
-            if (!eventsError && eventsData) {
-              eventsMap = new Map(eventsData.map((e) => [e.id, e]));
-            }
           }
 
           // Fetch business memberships
@@ -140,9 +117,6 @@ export function useBusinesses(options: UseBusinessesOptions = {}): UseBusinesses
       // Transform data to include related information
       const transformedData: BusinessWithDetails[] = (businessesData || []).map((business) => {
         const sponsorships = sponsorshipsMap.get(business.id) || [];
-        const linkedEvents = sponsorships
-          .map((s) => (s.event_id ? eventsMap.get(s.event_id) : null))
-          .filter((e): e is Events => e !== null && e !== undefined);
         const membership = business.membership_id
           ? membershipsMap.get(business.membership_id) || null
           : null;
@@ -150,7 +124,6 @@ export function useBusinesses(options: UseBusinessesOptions = {}): UseBusinesses
         return {
           ...business,
           sponsorships,
-          linkedEvents,
           membership,
         };
       });

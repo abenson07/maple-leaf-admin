@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import Head from "next/head";
 import { PageHeader1 } from "@/components/ui";
 import { FilterTabs, useFilterTabs } from "@/components/ui";
 import { useRoutes, RouteWithDeliverer } from "@/hooks";
@@ -14,7 +15,8 @@ import {
   Button,
 } from "@relume_io/relume-ui";
 import { BiSearch, BiMap, BiX, BiChevronDown, BiChevronRight } from "react-icons/bi";
-import { Modal } from "@/components/Modal";
+import { ErrorMessage } from "@/components/ErrorMessage";
+import { TableSkeleton } from "@/components/skeletons";
 
 type TabId = "by-route" | "by-deliverer" | "open-routes";
 
@@ -103,8 +105,12 @@ export default function RoutesPage() {
   };
 
   return (
-    <div>
-      <PageHeader1
+    <>
+      <Head>
+        <title>Routes | MLCC Admin</title>
+      </Head>
+      <div>
+        <PageHeader1
         breadcrumbs={[{ url: "/", title: "Home" }, { url: "/routes", title: "Routes" }]}
         heading="Routes"
         description="Manage delivery routes and deliverer assignments"
@@ -115,7 +121,7 @@ export default function RoutesPage() {
         buttons={[]}
       />
 
-      <div className="container mx-auto px-6 pb-8 md:px-8">
+      <div className="container mx-auto px-4 pb-8 sm:px-6 md:px-8">
         {/* Filter Tabs */}
         <FilterTabs
           tabs={[
@@ -130,19 +136,23 @@ export default function RoutesPage() {
 
         {/* Loading State */}
         {loading && (
-          <div className="flex items-center justify-center py-12">
-            <div className="text-text-secondary">Loading routes...</div>
+          <div className="py-12">
+            <TableSkeleton rows={5} columns={4} />
           </div>
         )}
 
         {/* Error State */}
         {error && (
-          <div className="rounded-lg bg-error/10 p-4 text-error">Error: {error}</div>
+          <ErrorMessage
+            message={error}
+            onRetry={() => window.location.reload()}
+            className="my-8"
+          />
         )}
 
         {/* By Route Tab */}
         {!loading && !error && activeTab === "by-route" && (
-          <div className="rounded-lg border border-border-primary">
+          <div className="overflow-x-auto rounded-lg border border-border-primary">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -180,7 +190,7 @@ export default function RoutesPage() {
 
         {/* By Deliverer Tab - Expandable Grouped Table */}
         {!loading && !error && activeTab === "by-deliverer" && (
-          <div className="rounded-lg border border-border-primary">
+          <div className="overflow-x-auto rounded-lg border border-border-primary">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -252,7 +262,7 @@ export default function RoutesPage() {
 
         {/* Open Routes Tab */}
         {!loading && !error && activeTab === "open-routes" && (
-          <div className="rounded-lg border border-border-primary">
+          <div className="overflow-x-auto rounded-lg border border-border-primary">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -413,6 +423,7 @@ export default function RoutesPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
