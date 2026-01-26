@@ -25,14 +25,19 @@ import {
   BiBarChartAlt2,
   BiBell,
   BiBuilding,
+  BiCalendar,
   BiCog,
   BiHelpCircle,
   BiMap,
   BiPieChartAlt2,
   BiSearch,
+  BiStopwatch,
   BiUser,
 } from "react-icons/bi";
-import { RxChevronRight, RxCross2 } from "react-icons/rx";
+import { HiOutlineUsers, HiOutlineFilter } from "react-icons/hi";
+import { FiFolder, FiGlobe } from "react-icons/fi";
+import { RxChevronRight, RxChevronDown, RxCross2 } from "react-icons/rx";
+import { FaFistRaised } from "react-icons/fa";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
@@ -40,9 +45,19 @@ import { useRouter } from "next/router";
 
 const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: BiPieChartAlt2 },
+  { title: "Calendar", url: "#", icon: BiCalendar },
+  { title: "My Tasks", url: "#", icon: BiStopwatch },
+  { title: "Projects", url: "#", icon: FiFolder },
+  { title: "Teams", url: "#", icon: HiOutlineUsers },
+  { title: "Leads", url: "#", icon: HiOutlineFilter },
   { title: "Neighbors", url: "/people", icon: BiUser },
   { title: "Routes", url: "/routes", icon: BiMap },
   { title: "Businesses", url: "/businesses", icon: BiBuilding },
+];
+
+const favouriteItems = [
+  { title: "Filllo Website", icon: FaFistRaised, color: "bg-red-500" },
+  { title: "Portfolio Tasks", icon: FiGlobe, color: "bg-blue-500" },
 ];
 
 const footerItems = [
@@ -211,37 +226,100 @@ const AppSidebar = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <SidebarProvider>
-      <Sidebar className="py-6" closeButtonClassName="fixed top-4 right-4 text-white">
-        <SidebarContent className="pt-6 lg:pt-18">
-          <SidebarMenu>
+      <Sidebar className="bg-gray-50 border-r border-gray-200" closeButtonClassName="fixed top-4 right-4 text-gray-600">
+        <SidebarContent className="pt-6">
+          {/* Header Section with Logo and Branding */}
+          <div className="px-6 pb-6 mb-4 border-b border-gray-200">
+            <div className="flex items-start gap-3 mb-2">
+              <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center shrink-0">
+                <span className="text-white text-xl font-bold">S</span>
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900">MLCC Admin</h2>
+                    <p className="text-sm text-gray-500">Community Dashboard</p>
+                  </div>
+                  <button className="text-gray-400 hover:text-gray-600">
+                    <RxChevronDown className="size-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <SidebarMenu className="px-3">
+            {/* Updates Item with Badge */}
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild className="hover:bg-transparent">
+                <Link href="#" className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 transition-colors">
+                  <BiBell className="size-5 shrink-0 text-gray-700" />
+                  <span className="text-gray-700 flex-1">Updates</span>
+                  <span className="size-5 rounded-full bg-red-500 flex items-center justify-center shrink-0">
+                    <span className="text-white text-xs font-medium">2</span>
+                  </span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+
+            {/* Main Navigation Items */}
             {menuItems.map((item, index) => {
               const isActive = currentPath === item.url || (item.url !== "/" && currentPath.startsWith(item.url));
               return (
                 <SidebarMenuItem key={index}>
-                  <SidebarMenuButton asChild isActive={isActive}>
-                    <Link href={item.url} className="flex w-full items-center gap-3 p-2">
-                      <item.icon className="size-6 shrink-0" />
-                      <span>{item.title}</span>
+                  <SidebarMenuButton asChild isActive={false} className="hover:bg-transparent">
+                    <Link 
+                      href={item.url} 
+                      className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                        isActive 
+                          ? "bg-blue-50" 
+                          : "hover:bg-gray-100"
+                      }`}
+                    >
+                      <item.icon className={`size-5 shrink-0 ${isActive ? "text-blue-600" : "text-gray-700"}`} />
+                      <span className={isActive ? "text-blue-600 font-medium" : "text-gray-700"}>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               );
             })}
           </SidebarMenu>
+
+          {/* Favourite Section */}
+          <div className="px-3 mt-6 pt-6 border-t border-gray-200">
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-3">FAVOURITE</h3>
+            <SidebarMenu>
+              {favouriteItems.map((item, index) => {
+                const IconComponent = item.icon;
+                return (
+                  <SidebarMenuItem key={index}>
+                    <SidebarMenuButton asChild className="hover:bg-transparent">
+                      <Link href="#" className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div className={`size-8 rounded-full ${item.color} flex items-center justify-center shrink-0`}>
+                          <IconComponent className="text-white text-sm" />
+                        </div>
+                        <span className="text-gray-700">{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </div>
         </SidebarContent>
-        <SidebarFooter className="mt-auto">
-          <div>
+        <SidebarFooter className="mt-auto border-t border-gray-200 pt-4">
+          <SidebarMenu className="px-3">
             {footerItems.map((item, index) => (
               <SidebarMenuItem key={index}>
-                <SidebarMenuButton asChild>
-                  <a href={item.url} className="flex w-full items-center gap-3 p-2">
-                    <item.icon className="size-6 shrink-0" />
-                    <span>{item.title}</span>
+                <SidebarMenuButton asChild className="hover:bg-transparent">
+                  <a href={item.url} className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 transition-colors">
+                    <item.icon className="size-5 shrink-0 text-gray-700" />
+                    <span className="text-gray-700">{item.title}</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
-          </div>
+          </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
       {children}
