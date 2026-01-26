@@ -88,14 +88,14 @@
       {
         "id": "2",
         "title": "Define Core Data Models and Schema",
-        "description": "Design and implement the fundamental data structures and database schema for the application",
-        "details": "Create entity relationship diagrams and define core data models. Implement database schema with appropriate tables, relationships, and constraints. Set up migration scripts for database versioning. Define data validation rules and constraints at the model level.",
+        "description": "Create TypeScript type definitions matching existing Supabase database schema",
+        "details": "Convert existing Supabase SQL schemas to TypeScript type definitions. The database is already set up in Supabase with tables: people, memberships, businesses, business_memberships, routes, deliveries, events, event_volunteers, payments, and sponsorships. Create TypeScript interfaces that match the actual database structure for type safety throughout the application.",
         "testStrategy": "Create unit tests for data model validation, test database migrations up and down, verify referential integrity constraints, and validate data type enforcement.",
         "priority": "high",
         "dependencies": [
           "1"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -107,7 +107,8 @@
             "testStrategy": "Run npm test to verify all unit tests pass. Run npm run build to verify successful compilation. Check for TypeScript errors, build warnings, and ensure build output directory is created with expected files. Verify no runtime errors in the built application.",
             "parentId": "undefined"
           }
-        ]
+        ],
+        "updatedAt": "2026-01-26T02:16:06.423Z"
       },
       {
         "id": "3",
@@ -364,9 +365,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-26T02:06:53.633Z",
+      "lastModified": "2026-01-26T02:16:06.423Z",
       "taskCount": 10,
-      "completedCount": 1,
+      "completedCount": 2,
       "tags": [
         "master"
       ]
