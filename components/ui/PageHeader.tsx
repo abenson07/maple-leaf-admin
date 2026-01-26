@@ -20,15 +20,17 @@ type Props = {
   breadcrumbs: BreadcrumbProps[];
   heading: string;
   description: string;
-  inputPlaceholder: string;
-  inputIcon: React.ReactNode;
+  inputPlaceholder?: string;
+  inputIcon?: React.ReactNode;
+  inputValue?: string;
+  onInputChange?: (value: string) => void;
   buttons: ButtonProps[];
 };
 
 export type PageHeader1Props = React.ComponentPropsWithoutRef<"section"> & Partial<Props>;
 
 export const PageHeader1 = (props: PageHeader1Props) => {
-  const { breadcrumbs, heading, description, inputPlaceholder, inputIcon, buttons } = {
+  const { breadcrumbs, heading, description, inputPlaceholder, inputIcon, inputValue, onInputChange, buttons } = {
     ...PageHeader1Defaults,
     ...props,
   };
@@ -62,9 +64,16 @@ export const PageHeader1 = (props: PageHeader1Props) => {
             </div>
             <div className="flex w-full items-end">
               <div className="flex w-full flex-col md:w-auto md:flex-row md:items-center">
-                <div className="mb-4 w-full md:mb-0 md:mr-4">
-                  <Input placeholder={inputPlaceholder} icon={inputIcon} />
-                </div>
+                {inputPlaceholder && (
+                  <div className="mb-4 w-full md:mb-0 md:mr-4">
+                    <Input
+                      placeholder={inputPlaceholder}
+                      icon={inputIcon}
+                      value={inputValue}
+                      onChange={(e) => onInputChange?.(e.target.value)}
+                    />
+                  </div>
+                )}
                 <div className="flex flex-wrap gap-4 md:flex-none">
                   {buttons.map((button, index) => (
                     <Button key={index} {...button}>

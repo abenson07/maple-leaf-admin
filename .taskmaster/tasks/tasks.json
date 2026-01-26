@@ -314,7 +314,7 @@
           2,
           3
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -322,7 +322,7 @@
             "description": "Build the main people page structure with three filter tabs (All Neighbors, Members, Duplicates) and basic layout components",
             "dependencies": [],
             "details": "Create pages/people.tsx with AdminLayout wrapper. Implement FilterTabs component with three tabs: 'All Neighbors', 'Members', and 'Duplicates'. Setup state management for active tab switching. Include basic page structure with search bar placeholder and table container. Ensure proper TypeScript typing for tab states and component props.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test tab switching functionality, verify correct tab highlighting, ensure page renders without errors in AdminLayout"
           },
           {
@@ -333,7 +333,7 @@
               1
             ],
             "details": "Create search input component with real-time filtering capabilities. Implement search logic to filter people data by name, email, and address fields. Setup debounced search to optimize performance. Create search state management and integrate with usePeople hook. Ensure search works consistently across all three filter tabs.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test search functionality with various inputs, verify filtering works across all tabs, confirm debouncing prevents excessive API calls"
           },
           {
@@ -345,7 +345,7 @@
               2
             ],
             "details": "Build Relume Table component with dynamic column configuration. For 'All Neighbors' tab: Name (with avatar), Email (copyable), Address columns. For 'Members' tab: add Tier and Last Renewal columns. For 'Duplicates' tab: show Email/Person, Memberships count, and Tiers columns. Implement CopyableText component for email fields. Integrate with usePeople hook for data fetching with joined membership data.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify correct columns display for each tab, test email copying functionality, confirm avatar images load properly, validate data sorting"
           },
           {
@@ -356,7 +356,7 @@
               3
             ],
             "details": "Create detail card sidebar component that slides in from the right when a person is selected from the table. Display comprehensive person information including name, contact details, address, and membership history. Show membership details with tier information, renewal dates, and status. Implement close functionality and proper state management for selected person. Ensure responsive design for mobile devices.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test sidebar opening/closing functionality, verify all person data displays correctly, confirm membership details are accurate, test responsive behavior"
           },
           {
@@ -367,7 +367,7 @@
               1
             ],
             "details": "Create Add New Neighbor modal with form fields for name, email, and address. Implement form validation for required fields and email format. Setup form submission handling with Supabase integration to create new person records. Include loading states during submission and success/error toast notifications. Ensure modal can be opened from page header and closes after successful submission.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test form validation with invalid inputs, verify successful record creation in Supabase, confirm toast notifications display properly, test modal open/close functionality"
           },
           {
@@ -376,7 +376,7 @@
             "description": "Execute unit tests and verify the project builds successfully",
             "dependencies": [],
             "details": "Run npm test to execute all unit tests and ensure they pass. Run npm run build to verify the project compiles without errors. Fix any test failures or build errors before marking the task as complete.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify all unit tests pass and the project builds successfully without errors"
           }
         ]

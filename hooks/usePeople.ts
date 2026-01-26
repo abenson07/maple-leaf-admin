@@ -2,18 +2,23 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
-import type { People, PeopleInsert, PeopleUpdate } from "@/types/database";
+import type { People, PeopleInsert, PeopleUpdate, Memberships } from "@/types/database";
+
+export interface PersonWithMembership extends People {
+  membership?: Memberships | null;
+}
 
 interface UsePeopleOptions {
   autoFetch?: boolean;
   filters?: {
     search?: string;
     membershipId?: string;
+    hasMembership?: boolean;
   };
 }
 
 interface UsePeopleReturn {
-  people: People[];
+  people: PersonWithMembership[];
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
@@ -24,7 +29,7 @@ interface UsePeopleReturn {
 
 export function usePeople(options: UsePeopleOptions = {}): UsePeopleReturn {
   const { autoFetch = true, filters = {} } = options;
-  const [people, setPeople] = useState<People[]>([]);
+  const [people, setPeople] = useState<PersonWithMembership[]>([]);
   const [loading, setLoading] = useState<boolean>(autoFetch);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,6 +38,7 @@ export function usePeople(options: UsePeopleOptions = {}): UsePeopleReturn {
       setLoading(true);
       setError(null);
 
+      // Build query for people
       let query = supabaseClient.from("people").select("*");
 
       // Apply search filter
@@ -48,7 +54,16 @@ export function usePeople(options: UsePeopleOptions = {}): UsePeopleReturn {
         query = query.eq("membership_id", filters.membershipId);
       }
 
-      const { data, error: queryError } = await query.order("full_name", {
+      // Filter by membership status
+      if (filters.hasMembership !== undefined) {
+        if (filters.hasMembership) {
+          query = query.not("membership_id", "is", null);
+        } else {
+          query = query.is("membership_id", null);
+        }
+      }
+
+      const { data: peopleData, error: queryError } = await query.order("full_name", {
         ascending: true,
       });
 
@@ -56,7 +71,45 @@ export function usePeople(options: UsePeopleOptions = {}): UsePeopleReturn {
         throw queryError;
       }
 
-      setPeople(data || []);
+      // Fetch memberships separately and join
+      const membershipIds = Array.from(
+        new Set(
+          (peopleData || [])
+            .map((p) => p.membership_id)
+            .filter((id): id is string => id !== null && id !== undefined)
+        )
+      );
+
+      let membershipsMap = new Map<string, Memberships>();
+
+      if (membershipIds.length > 0) {
+        try {
+          const { data: membershipsData, error: membershipsError } = await supabaseClient
+            .from("memberships")
+            .select("*")
+            .in("id", membershipIds);
+
+          if (membershipsError) {
+            console.warn("Error fetching memberships:", membershipsError);
+            // Don't throw - we can still return people without membership data
+          } else if (membershipsData) {
+            membershipsMap = new Map(
+              membershipsData.map((m) => [m.id, m])
+            );
+          }
+        } catch (membershipErr) {
+          console.warn("Error fetching memberships:", membershipErr);
+          // Continue without membership data
+        }
+      }
+
+      // Transform data to match PersonWithMembership interface
+      const transformedData: PersonWithMembership[] = (peopleData || []).map((person) => ({
+        ...person,
+        membership: person.membership_id ? membershipsMap.get(person.membership_id) || null : null,
+      }));
+
+      setPeople(transformedData);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to fetch people";
       setError(errorMessage);
@@ -64,7 +117,7 @@ export function usePeople(options: UsePeopleOptions = {}): UsePeopleReturn {
     } finally {
       setLoading(false);
     }
-  }, [filters.search, filters.membershipId]);
+  }, [filters.search, filters.membershipId, filters.hasMembership]);
 
   const create = useCallback(async (data: PeopleInsert): Promise<People | null> => {
     try {
