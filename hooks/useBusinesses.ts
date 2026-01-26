@@ -2,18 +2,32 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabaseClient } from "@/lib/supabaseClient";
-import type { Businesses, BusinessesInsert, BusinessesUpdate } from "@/types/database";
+import type {
+  Businesses,
+  BusinessesInsert,
+  BusinessesUpdate,
+  Sponsorships,
+  Events,
+  BusinessMemberships,
+} from "@/types/database";
+
+export interface BusinessWithDetails extends Businesses {
+  sponsorships?: Sponsorships[];
+  linkedEvents?: Events[];
+  membership?: BusinessMemberships | null;
+}
 
 interface UseBusinessesOptions {
   autoFetch?: boolean;
   filters?: {
     search?: string;
     membershipId?: string;
+    status?: "active" | "past" | "yet-to-support"; // Filter by sponsorship status
   };
 }
 
 interface UseBusinessesReturn {
-  businesses: Businesses[];
+  businesses: BusinessWithDetails[];
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
@@ -24,7 +38,7 @@ interface UseBusinessesReturn {
 
 export function useBusinesses(options: UseBusinessesOptions = {}): UseBusinessesReturn {
   const { autoFetch = true, filters = {} } = options;
-  const [businesses, setBusinesses] = useState<Businesses[]>([]);
+  const [businesses, setBusinesses] = useState<BusinessWithDetails[]>([]);
   const [loading, setLoading] = useState<boolean>(autoFetch);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,7 +62,7 @@ export function useBusinesses(options: UseBusinessesOptions = {}): UseBusinesses
         query = query.eq("membership_id", filters.membershipId);
       }
 
-      const { data, error: queryError } = await query.order("business_name", {
+      const { data: businessesData, error: queryError } = await query.order("business_name", {
         ascending: true,
       });
 
@@ -56,7 +70,123 @@ export function useBusinesses(options: UseBusinessesOptions = {}): UseBusinesses
         throw queryError;
       }
 
-      setBusinesses(data || []);
+      // Fetch sponsorships and events separately
+      const businessIds = (businessesData || []).map((b) => b.id);
+
+      let sponsorshipsMap = new Map<string, Sponsorships[]>();
+      let eventsMap = new Map<string, Events>();
+      let membershipsMap = new Map<string, BusinessMemberships>();
+
+      if (businessIds.length > 0) {
+        try {
+          // Fetch sponsorships
+          const { data: sponsorshipsData, error: sponsorshipsError } = await supabaseClient
+            .from("sponsorships")
+            .select("*")
+            .in("business_id", businessIds);
+
+          if (!sponsorshipsError && sponsorshipsData) {
+            sponsorshipsData.forEach((sponsorship) => {
+              if (sponsorship.business_id) {
+                if (!sponsorshipsMap.has(sponsorship.business_id)) {
+                  sponsorshipsMap.set(sponsorship.business_id, []);
+                }
+                sponsorshipsMap.get(sponsorship.business_id)!.push(sponsorship);
+              }
+            });
+          }
+
+          // Fetch event IDs from sponsorships
+          const eventIds = Array.from(
+            new Set(
+              sponsorshipsData
+                ?.map((s) => s.event_id)
+                .filter((id): id is string => id !== null && id !== undefined) || []
+            )
+          );
+
+          if (eventIds.length > 0) {
+            const { data: eventsData, error: eventsError } = await supabaseClient
+              .from("events")
+              .select("*")
+              .in("id", eventIds);
+
+            if (!eventsError && eventsData) {
+              eventsMap = new Map(eventsData.map((e) => [e.id, e]));
+            }
+          }
+
+          // Fetch business memberships
+          const membershipIds = (businessesData || [])
+            .map((b) => b.membership_id)
+            .filter((id): id is string => id !== null && id !== undefined);
+
+          if (membershipIds.length > 0) {
+            const { data: membershipsData, error: membershipsError } = await supabaseClient
+              .from("business_memberships")
+              .select("*")
+              .in("id", membershipIds);
+
+            if (!membershipsError && membershipsData) {
+              membershipsMap = new Map(membershipsData.map((m) => [m.id, m]));
+            }
+          }
+        } catch (joinErr) {
+          console.warn("Error fetching related data:", joinErr);
+          // Continue without related data
+        }
+      }
+
+      // Transform data to include related information
+      const transformedData: BusinessWithDetails[] = (businessesData || []).map((business) => {
+        const sponsorships = sponsorshipsMap.get(business.id) || [];
+        const linkedEvents = sponsorships
+          .map((s) => (s.event_id ? eventsMap.get(s.event_id) : null))
+          .filter((e): e is Events => e !== null && e !== undefined);
+        const membership = business.membership_id
+          ? membershipsMap.get(business.membership_id) || null
+          : null;
+
+        return {
+          ...business,
+          sponsorships,
+          linkedEvents,
+          membership,
+        };
+      });
+
+      // Apply status filter if specified
+      let filteredData = transformedData;
+      if (filters.status) {
+        filteredData = transformedData.filter((business) => {
+          const sponsorships = business.sponsorships || [];
+          if (filters.status === "active") {
+            // Active: has active membership or recent paid sponsorships
+            return (
+              (business.membership && business.membership.status === "active") ||
+              sponsorships.some((s) => s.status === "paid" && s.paid_date)
+            );
+          } else if (filters.status === "past") {
+            // Past: has past sponsorships but not currently active
+            return (
+              sponsorships.length > 0 &&
+              !(
+                (business.membership && business.membership.status === "active") ||
+                sponsorships.some((s) => s.status === "paid" && s.paid_date)
+              )
+            );
+          } else if (filters.status === "yet-to-support") {
+            // Yet to support: no sponsorships and no active membership
+            return (
+              sponsorships.length === 0 &&
+              (!business.membership || business.membership.status !== "active")
+            );
+          }
+          return true;
+        });
+      }
+
+      setBusinesses(filteredData);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to fetch businesses";
       setError(errorMessage);
@@ -64,7 +194,7 @@ export function useBusinesses(options: UseBusinessesOptions = {}): UseBusinesses
     } finally {
       setLoading(false);
     }
-  }, [filters.search, filters.membershipId]);
+  }, [filters.search, filters.membershipId, filters.status]);
 
   const create = useCallback(async (data: BusinessesInsert): Promise<Businesses | null> => {
     try {

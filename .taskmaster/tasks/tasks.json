@@ -471,7 +471,7 @@
           2,
           3
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -479,7 +479,7 @@
             "description": "Create the main businesses page with four filter tabs: All Businesses, Active Members, Past Sponsors, Yet to Support",
             "dependencies": [],
             "details": "Create pages/businesses.tsx with AdminLayout wrapper. Implement FilterTabs component with four tabs: All Businesses, Active Members, Past Sponsors, Yet to Support. Each tab should have badge counts showing number of businesses in each category. Setup state management for active tab selection and filtering logic.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test tab switching functionality, verify badge counts update correctly, confirm filtering works for each business category"
           },
           {
@@ -490,7 +490,7 @@
               1
             ],
             "details": "Add search input component to the businesses page header. Implement search logic that filters businesses by company name, contact name, and linked events. Use debounced search to improve performance. Integrate with useBusinesses hook to fetch filtered results from the backend.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test search across all specified fields, verify debounced search reduces API calls, confirm search results update in real-time"
           },
           {
@@ -501,7 +501,7 @@
               2
             ],
             "details": "Implement Relume Table component with columns: Company Name, Contact Name, Email, Phone, Address, Sponsorship Tags, Linked Events, Status. Add proper column sorting, row selection, and responsive design. Format sponsorship tags with color-coded badges (Gold, Silver, Bronze, In-Kind). Make table rows clickable to open detail sidebar.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test table sorting functionality, verify all columns display correctly, confirm row selection and click handlers work properly"
           },
           {
@@ -512,7 +512,7 @@
               3
             ],
             "details": "Create detail card sidebar component that displays complete business profile including: sponsorship history timeline, sponsorship tags with visual indicators, linked events list, member since date, lifetime sponsorship amount, contact information, and address. Implement slide-out animation and close functionality. Fetch detailed data when business is selected.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test sidebar opens with correct business data, verify all profile information displays accurately, confirm sponsorship history and financial calculations are correct"
           },
           {
@@ -523,7 +523,7 @@
               4
             ],
             "details": "Build Add New Business modal with form fields for company name, contact information, address, initial sponsorship level, and tags. Implement form validation using proper validation library. Add file upload for business logo. Integrate with useBusinesses hook for creating new business records. Include success/error toast notifications.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test form validation for all required fields, verify new business creation updates the table, confirm file upload works correctly, validate toast notifications appear"
           },
           {
@@ -532,7 +532,7 @@
             "description": "Execute unit tests and verify the project builds successfully",
             "dependencies": [],
             "details": "Run npm test to execute all unit tests and ensure they pass. Run npm run build to verify the project compiles without errors. Fix any test failures or build errors before marking the task as complete.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify all unit tests pass and the project builds successfully without errors"
           }
         ]
