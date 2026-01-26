@@ -1,0 +1,286 @@
+# MLCC Dashboard - Page Recreation PRD
+
+## Project Context
+
+This is a Next.js application (using Pages Router) that serves as a community dashboard for MLCC (Maple Leaf Community Council) coordinators. The application uses:
+
+- **Next.js 15** with Pages Router architecture
+- **Supabase** as the backend database and authentication provider
+- **Relume UI components** (@relume_io/relume-ui) for UI components including Table, Button, Input, Pagination, Breadcrumb, and other design system components
+- **Tailwind CSS** with custom color palette (primary green tones, cream backgrounds)
+- **TypeScript** for type safety
+
+The application needs to be rebuilt from scratch as the current implementation is failing. Focus on functionality and user experience, not complex setup details.
+
+## Application Structure
+
+The application has a consistent layout structure:
+- **Sidebar navigation** with links to: Dashboard, Neighbors, Routes, Businesses
+- **AdminLayout** wrapper component that provides consistent page structure
+- **Topbar** component for page headers with search and action buttons
+- **FilterTabs** component for filtering content
+- **Toast notifications** for user feedback
+
+## Pages to Recreate
+
+### 1. Dashboard Page (/dashboard)
+
+**Purpose**: Display membership metrics and revenue overview
+
+**Functionality**:
+- Display a page header with title "Dashboard" and description "Membership metrics and revenue overview"
+- Show membership metrics widget containing:
+  - Stacked bar chart showing monthly revenue breakdown (Memberships vs Others)
+  - Monthly breakdown table with metrics like: Total Revenue, Membership Revenue, Other Revenue, New Members, Renewals, etc.
+  - Historical monthly averages by product table
+- Fetch data from Supabase (likely from memberships table and related revenue data)
+- Display loading state while fetching data
+- Display error state if data fetch fails
+- Use the MembershipMetricsWidget component to render the metrics
+
+**Data Requirements**:
+- Monthly revenue data (membership revenue and other revenue)
+- Membership metrics (new members, renewals, etc.) by month
+- Product-level revenue averages by month
+
+**User Interactions**:
+- View-only page (no editing capabilities)
+- Chart tooltips on hover showing detailed revenue breakdown
+
+---
+
+### 2. Neighbors Page (/people)
+
+**Purpose**: Manage and view community members (neighbors)
+
+**Functionality**:
+- Display page header with:
+  - Title "Neighbors"
+  - Search bar to filter by name, email, or address
+  - "Add new neighbor" button
+  - Sort options (by name)
+- Filter tabs with badges showing counts:
+  - "All Neighbors" - shows all people
+  - "Members" - shows only people with active memberships (must have membershipId and active status)
+  - "Duplicates" - shows people whose emails appear in duplicate memberships
+- Display table of neighbors with columns:
+  - **All Neighbors view**: Name (with avatar), Email (copyable), Address
+  - **Members view**: Name (with avatar), Tier, Last Renewal, Address, Email (copyable)
+  - **Duplicates view**: Email/Person, Memberships count, Tiers
+- Clicking a row (except in duplicates view) opens a detail card sidebar showing:
+  - Person name, email, address
+  - Membership information (if applicable): tier, status, last renewal date
+  - Ability to edit person details
+- Add new neighbor modal/form with fields:
+  - Name (full_name)
+  - Email
+  - Address
+- Save new neighbor to Supabase `people` table
+- Fetch people data from Supabase with joined membership information
+- Display loading and error states
+
+**Data Requirements**:
+- People data from `people` table
+- Membership data joined to people (membership_id, membership_status, membership_tier, last_renewal)
+- Duplicate membership detection logic
+
+**User Interactions**:
+- Search/filter neighbors
+- Switch between filter tabs
+- Click row to view details
+- Add new neighbor
+- Edit neighbor details (in detail card)
+- Copy email addresses to clipboard
+
+---
+
+### 3. Routes Page (/routes)
+
+**Purpose**: Manage delivery routes and route assignments to deliverers
+
+**Functionality**:
+- Display page header with:
+  - Title "Routes"
+  - Search bar to filter by route name, deliverer, or dropoff location
+  - "Add new deliverer" button (placeholder for future functionality)
+- Three filter tabs:
+  - **By Route** - shows routes that have been assigned to deliverers (claimed routes)
+  - **By Deliverer** - groups routes by deliverer, showing each deliverer's assigned routes
+  - **Open Routes** - shows routes without assigned deliverers
+- **By Route tab**:
+  - Display table of claimed routes with columns: Route Name, Leaflets, Dropoff Location, Deliverer (name/email)
+  - Clicking a route opens detail card sidebar showing:
+    - Route name, leaflets count, dropoff location
+    - Deliverer information (name, email, address)
+    - Route type (Single family residence, Multi-family, Commercial, Mixed)
+    - Route status (Scheduled, In Progress, Completed, Open)
+- **By Deliverer tab**:
+  - Display grouped table showing deliverers with their assigned routes
+  - Each deliverer shows: name, email, number of routes, last delivery date, status
+  - Expandable/collapsible view of routes per deliverer
+  - Actions available: Skip deliverer, Unassign deliverer, Skip route, Unassign route (placeholders)
+- **Open Routes tab**:
+  - Display table of unassigned routes
+  - Show route name, leaflets, dropoff location
+  - "Assign" button/action for each route (placeholder)
+- Fetch routes data from Supabase `routes` table with joined deliverer information from `people` table
+- Display loading and error states
+
+**Data Requirements**:
+- Routes data from `routes` table
+- Deliverer information from `people` table (joined via primary_deliverer_id)
+- Route status and type information
+
+**User Interactions**:
+- Search/filter routes
+- Switch between tabs
+- Click route to view details
+- Assign routes to deliverers (future)
+- Unassign routes from deliverers (future)
+
+---
+
+### 4. Businesses Page (/businesses)
+
+**Purpose**: Manage business sponsors and members
+
+**Functionality**:
+- Display page header with:
+  - Title "Businesses"
+  - Search bar to filter by company name, contact name, or linked events
+  - "Add new businesses" button
+- Filter tabs with badges showing counts:
+  - "All Businesses" - shows all businesses
+  - "Active Members" - shows businesses with activeMember status
+  - "Past Sponsors" - shows businesses with pastSponsor status
+  - "Yet to Support" - shows businesses with yetToSupport status
+- Display table of businesses with columns:
+  - Company Name, Contact Name, Email, Phone, Address, Sponsorship Tags, Linked Events, Status
+- Clicking a row opens detail card sidebar showing:
+  - Company information (name, contact, email, phone, address, website)
+  - Sponsorship history and tags (Gold, Silver, Bronze, In-Kind)
+  - Linked events
+  - Member since date
+  - Total lifetime sponsorship amount
+  - Past sponsorships list
+  - Ability to edit business details
+- Add new business modal/form with fields:
+  - Company Name (name)
+  - Contact Name (contact_name)
+  - Email
+  - Phone
+  - Address
+- Save new business to Supabase `businesses` table
+- Fetch businesses data from Supabase
+- Display loading and error states
+
+**Data Requirements**:
+- Businesses data from `businesses` table
+- Business status (activeMember, pastSponsor, yetToSupport)
+- Sponsorship tags and linked events
+
+**User Interactions**:
+- Search/filter businesses
+- Switch between filter tabs
+- Click row to view details
+- Add new business
+- Edit business details (in detail card)
+- Export business profile (future)
+- Renew sponsorship (future)
+
+---
+
+### 5. Events Page (/events)
+
+**Purpose**: Manage community events (placeholder/coming soon)
+
+**Functionality**:
+- Display page header with:
+  - Title "Events"
+  - "Create event" button (placeholder)
+  - Search placeholder (coming soon)
+- Display placeholder content:
+  - Message: "Events coming soon"
+  - Description: "This view will surface campaign planning tools, volunteer assignments, and RSVP tracking"
+  - Sample events list showing: event name, date, location, attendees count, volunteers needed
+  - "Plan New Event" button (placeholder)
+  - "Connect Calendar" button (placeholder)
+
+**Data Requirements**:
+- Events data from `events` table (future)
+
+**User Interactions**:
+- View placeholder content
+- Future: Create events, manage RSVPs, assign volunteers
+
+---
+
+### 6. Home Page (/)
+
+**Purpose**: Redirect to default page
+
+**Functionality**:
+- Redirect to `/people` (Neighbors page) using Next.js getServerSideProps redirect
+
+---
+
+## Common Components and Patterns
+
+### Layout Components
+- **AdminLayout**: Wraps all pages, provides consistent structure with header and content areas
+- **Sidebar**: Navigation sidebar with links to main pages, shows active state
+- **DashboardLayoutContainer**: Container for dashboard-specific layouts
+
+### Common UI Components
+- **Topbar**: Page header with title, search, and action buttons
+- **FilterTabs**: Tab-based filtering with badge counts
+- **Table**: Use Relume Table components (Table, TableHeader, TableBody, TableRow, TableCell, TableHead)
+- **Button**: Use Relume Button component
+- **Input**: Use Relume Input component for search
+- **Modal**: Custom modal component for forms
+- **Toast**: Toast notifications for success/error messages
+- **CopyableText**: Component for copyable text (emails, etc.)
+- **Badge**: Status badges
+- **PageHeader**: Relume PageHeader component (alternative to Topbar)
+- **GroupedTable**: Relume GroupedTable component for grouped data
+- **StackedTable**: Relume StackedTable component for stacked layouts
+
+### Data Fetching Pattern
+- Use custom hooks (usePeople, useBusinesses, useRoutes, useDashboard) that:
+  - Fetch data from Supabase
+  - Handle loading states
+  - Handle error states
+  - Provide refetch capabilities
+- Use Supabase client from `@/lib/supabaseClient` for client-side queries
+- Use serverSupabase from `@/lib/serverSupabase` for server-side queries (getServerSideProps)
+
+### Styling
+- Use Tailwind CSS with custom color palette
+- Primary colors: green tones (#6b8e23, etc.)
+- Cream backgrounds for cards and sections
+- Consistent spacing and typography
+
+## Technical Requirements
+
+1. **Next.js Pages Router**: All pages should be in the `pages/` directory
+2. **TypeScript**: All components and pages should be typed
+3. **Supabase Integration**: 
+   - Client-side queries use `supabaseClient`
+   - Server-side queries use `serverSupabase`
+   - Handle Supabase errors gracefully
+4. **Relume Components**: Use Relume UI components where applicable, especially for tables and forms
+5. **Responsive Design**: Ensure pages work on mobile and desktop
+6. **Loading States**: Show loading indicators while fetching data
+7. **Error Handling**: Display user-friendly error messages
+8. **Toast Notifications**: Use ToastProvider for user feedback on actions
+
+## Success Criteria
+
+- All pages render without errors
+- Data loads from Supabase correctly
+- Search and filtering work as expected
+- Detail cards/sidebars open and close properly
+- Forms can add new records to Supabase
+- Loading and error states display appropriately
+- Navigation between pages works correctly
+- Responsive design works on different screen sizes
