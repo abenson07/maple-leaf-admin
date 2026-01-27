@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import Head from "next/head";
 import { PageHeader1 } from "@/components/ui";
 import { FilterTabs, useFilterTabs } from "@/components/ui";
@@ -20,6 +20,7 @@ import { ErrorMessage } from "@/components/ErrorMessage";
 import { TableSkeleton } from "@/components/skeletons";
 import { Modal } from "@/components/Modal";
 import { showToast } from "@/lib/toast";
+import { RouteIcon, DelivererIcon, UnassignedIcon, UnassignRouteIcon, SkipIcon } from "@/components/icons";
 
 type TabId = "by-route" | "by-deliverer" | "open-routes";
 
@@ -36,10 +37,51 @@ export default function RoutesPage() {
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const delivererInputRef = useRef<HTMLInputElement>(null);
   const delivererDropdownRef = useRef<HTMLDivElement>(null);
+  const [unassignModalOpen, setUnassignModalOpen] = useState(false);
+  const [routeToUnassign, setRouteToUnassign] = useState<RouteWithDeliverer | null>(null);
+  const [isUnassigning, setIsUnassigning] = useState(false);
+  const [markAsTempModalOpen, setMarkAsTempModalOpen] = useState(false);
+  const [routeToMarkAsTemp, setRouteToMarkAsTemp] = useState<RouteWithDeliverer | null>(null);
+  const [isMarkingAsTemp, setIsMarkingAsTemp] = useState(false);
 
-  // Determine filters based on active tab
-  const filters = useMemo(() => {
-    const baseFilters: { search?: string; hasDeliverer?: boolean } = {};
+  // Always fetch all routes needed for tab counts, regardless of active tab
+  // Fetch assigned routes (for by-route and by-deliverer tabs)
+  const assignedFilters = useMemo(() => {
+    const baseFilters: { search?: string; hasDeliverer?: boolean; isSkipped?: boolean } = {
+      hasDeliverer: true,
+      isSkipped: false,
+    };
+    if (searchQuery) {
+      baseFilters.search = searchQuery;
+    }
+    return baseFilters;
+  }, [searchQuery]);
+
+  // Fetch unassigned routes (for open-routes tab)
+  const unassignedFilters = useMemo(() => {
+    const baseFilters: { search?: string; hasDeliverer?: boolean } = {
+      hasDeliverer: false,
+    };
+    if (searchQuery) {
+      baseFilters.search = searchQuery;
+    }
+    return baseFilters;
+  }, [searchQuery]);
+
+  // Fetch skipped routes (for open-routes tab)
+  const skippedFilters = useMemo(() => {
+    const baseFilters: { search?: string; isSkipped?: boolean } = {
+      isSkipped: true,
+    };
+    if (searchQuery) {
+      baseFilters.search = searchQuery;
+    }
+    return baseFilters;
+  }, [searchQuery]);
+
+  // Determine filters for the currently active tab display
+  const displayFilters = useMemo(() => {
+    const baseFilters: { search?: string; hasDeliverer?: boolean; isSkipped?: boolean } = {};
 
     if (searchQuery) {
       baseFilters.search = searchQuery;
@@ -47,6 +89,7 @@ export default function RoutesPage() {
 
     if (activeTab === "by-route" || activeTab === "by-deliverer") {
       baseFilters.hasDeliverer = true;
+      baseFilters.isSkipped = false;
     } else if (activeTab === "open-routes") {
       baseFilters.hasDeliverer = false;
     }
@@ -54,10 +97,47 @@ export default function RoutesPage() {
     return baseFilters;
   }, [searchQuery, activeTab]);
 
-  const { routes, loading, error, update: updateRoute, refetch: refetchRoutes } = useRoutes({
+  // Always fetch all route types for accurate tab counts
+  const { routes: assignedRoutes, refetch: refetchAssignedRoutes } = useRoutes({
     autoFetch: true,
-    filters: filters as any,
+    filters: assignedFilters as any,
   });
+
+  const { routes: unassignedRoutes, refetch: refetchUnassignedRoutes } = useRoutes({
+    autoFetch: true,
+    filters: unassignedFilters as any,
+  });
+
+  const { routes: skippedRoutes, refetch: refetchSkippedRoutes } = useRoutes({
+    autoFetch: true,
+    filters: skippedFilters as any,
+  });
+
+  // Routes for display (based on active tab)
+  const { routes: displayRoutes, loading, error, update: updateRoute, refetch: refetchDisplayRoutes } = useRoutes({
+    autoFetch: true,
+    filters: displayFilters as any,
+  });
+
+  // Combine routes for Open Routes tab display
+  const routes = useMemo(() => {
+    if (activeTab === "open-routes") {
+      // Combine unassigned routes with skipped routes, removing duplicates
+      const routeMap = new Map<string, RouteWithDeliverer>();
+      displayRoutes.forEach(route => routeMap.set(route.id, route));
+      skippedRoutes.forEach(route => routeMap.set(route.id, route));
+      return Array.from(routeMap.values());
+    }
+    return displayRoutes;
+  }, [displayRoutes, skippedRoutes, activeTab]);
+
+  // Combined refetch function
+  const refetchRoutes = useCallback(async () => {
+    await refetchAssignedRoutes();
+    await refetchUnassignedRoutes();
+    await refetchSkippedRoutes();
+    await refetchDisplayRoutes();
+  }, [refetchAssignedRoutes, refetchUnassignedRoutes, refetchSkippedRoutes, refetchDisplayRoutes]);
 
   // Fetch all people for the assign dropdown
   const { people: allPeople, loading: peopleLoading } = usePeople({
@@ -200,17 +280,36 @@ export default function RoutesPage() {
     }));
   }, [routes]);
 
-  // Calculate tab counts
+  // Calculate tab counts from all fetched routes (not just displayed routes)
   const tabCounts = useMemo(() => {
-    const allRoutes = routes.length;
-    const withDeliverer = routes.filter((r) => r.primary_deliverer_id).length;
-    const openRoutes = routes.filter((r) => !r.primary_deliverer_id).length;
+    // Count assigned routes (non-skipped routes with deliverers)
+    const assignedCount = assignedRoutes.length;
+    
+    // Count open routes (unassigned + skipped)
+    const routeMap = new Map<string, RouteWithDeliverer>();
+    unassignedRoutes.forEach(route => routeMap.set(route.id, route));
+    skippedRoutes.forEach(route => routeMap.set(route.id, route));
+    const openRoutesCount = routeMap.size;
+
+    // Count unique deliverers from assigned routes
+    const delivererMap = new Map<string, RouteWithDeliverer[]>();
+    assignedRoutes.forEach((route) => {
+      const delivererId = route.primary_deliverer_id;
+      if (delivererId) {
+        if (!delivererMap.has(delivererId)) {
+          delivererMap.set(delivererId, []);
+        }
+        delivererMap.get(delivererId)!.push(route);
+      }
+    });
+    const delivererCount = delivererMap.size;
+
     return {
-      "by-route": withDeliverer,
-      "by-deliverer": routesByDeliverer.length,
-      "open-routes": openRoutes,
+      "by-route": assignedCount,
+      "by-deliverer": delivererCount,
+      "open-routes": openRoutesCount,
     };
-  }, [routes, routesByDeliverer]);
+  }, [assignedRoutes, unassignedRoutes, skippedRoutes]);
 
 
   const getDelivererName = (route: RouteWithDeliverer) => {
@@ -259,6 +358,87 @@ export default function RoutesPage() {
       console.error("Error assigning route:", err);
     } finally {
       setIsAssigning(false);
+    }
+  };
+
+  // Handle unassign click
+  const handleUnassignClick = (route: RouteWithDeliverer, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setRouteToUnassign(route);
+    setUnassignModalOpen(true);
+  };
+
+  // Handle unassign confirmation
+  const handleUnassignConfirm = async () => {
+    if (!routeToUnassign) return;
+
+    setIsUnassigning(true);
+    try {
+      const result = await updateRoute(routeToUnassign.id, {
+        primary_deliverer_id: null,
+        primary_deliverer_email: null,
+      });
+
+      if (result) {
+        showToast.success("Route unassigned");
+        setUnassignModalOpen(false);
+        setRouteToUnassign(null);
+        await refetchRoutes();
+      } else {
+        showToast.error("Failed to unassign route");
+      }
+    } catch (err) {
+      showToast.error("Failed to unassign route");
+      console.error("Error unassigning route:", err);
+    } finally {
+      setIsUnassigning(false);
+    }
+  };
+
+  // Handle mark as temp click
+  const handleMarkAsTempClick = (route: RouteWithDeliverer, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setRouteToMarkAsTemp(route);
+    setMarkAsTempModalOpen(true);
+  };
+
+  // Handle mark as temp confirmation
+  const handleMarkAsTempConfirm = async () => {
+    if (!routeToMarkAsTemp) return;
+
+    setIsMarkingAsTemp(true);
+    try {
+      const routeId = routeToMarkAsTemp.id;
+      const previousIsSkipped = routeToMarkAsTemp.is_skipped;
+
+      const result = await updateRoute(routeId, {
+        is_skipped: true,
+      });
+
+      if (result) {
+        showToast.successWithUndo(
+          "Route marked as temporary",
+          async () => {
+            // Undo: restore previous is_skipped value
+            await updateRoute(routeId, {
+              is_skipped: previousIsSkipped,
+            });
+            await refetchRoutes();
+          },
+          3000
+        );
+
+        setMarkAsTempModalOpen(false);
+        setRouteToMarkAsTemp(null);
+        await refetchRoutes();
+      } else {
+        showToast.error("Failed to mark route as temporary");
+      }
+    } catch (err) {
+      showToast.error("Failed to mark route as temporary");
+      console.error("Error marking route as temporary:", err);
+    } finally {
+      setIsMarkingAsTemp(false);
     }
   };
 
@@ -312,9 +492,9 @@ export default function RoutesPage() {
             <div className="px-4 pt-4 pb-3 border-b border-gray-100">
               <FilterTabs
                 tabs={[
-                  { id: "by-route", label: "By Route", count: tabCounts["by-route"] },
-                  { id: "by-deliverer", label: "By Deliverer", count: tabCounts["by-deliverer"] },
-                  { id: "open-routes", label: "Open Routes", count: tabCounts["open-routes"] },
+                  { id: "by-route", label: "Assigned Routes", count: tabCounts["by-route"], icon: <RouteIcon className="size-5" /> },
+                  { id: "by-deliverer", label: "Deliverers", count: tabCounts["by-deliverer"], icon: <DelivererIcon className="size-5" /> },
+                  { id: "open-routes", label: "Open routes", count: tabCounts["open-routes"], icon: <UnassignedIcon className="size-5" /> },
                 ]}
                 activeTab={activeTab}
                 onTabChange={(tabId) => setActiveTab(tabId as TabId)}
@@ -329,12 +509,13 @@ export default function RoutesPage() {
                     <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Route Name</TableHead>
                     <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Leaflets</TableHead>
                     <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Deliverer</TableHead>
+                    <TableHead className="p-0 bg-white text-left"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {routes.length === 0 ? (
                     <TableRow className="border-b border-gray-100">
-                      <TableCell colSpan={3} className="text-center py-12 text-gray-500 bg-white">
+                      <TableCell colSpan={4} className="text-center py-12 text-gray-500 bg-white">
                         No routes found
                       </TableCell>
                     </TableRow>
@@ -348,6 +529,26 @@ export default function RoutesPage() {
                         <TableCell className="px-6 py-4 bg-white font-medium text-gray-900">{route.route_name}</TableCell>
                         <TableCell className="px-6 py-4 bg-white text-gray-600">{route.leaflet_count || 0}</TableCell>
                         <TableCell className="px-6 py-4 bg-white text-gray-600">{getDelivererName(route)}</TableCell>
+                        <TableCell className="p-2 bg-white text-left">
+                          <div className="flex flex-row gap-2">
+                            <button
+                              onClick={(e) => handleUnassignClick(route, e)}
+                              className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                              title="Unassign"
+                              aria-label="Unassign route"
+                            >
+                              <UnassignRouteIcon className="size-5" />
+                            </button>
+                            <button
+                              onClick={(e) => handleMarkAsTempClick(route, e)}
+                              className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                              title="Mark as temp"
+                              aria-label="Mark route as temporary"
+                            >
+                              <SkipIcon className="size-5" />
+                            </button>
+                          </div>
+                        </TableCell>
                       </TableRow>
                     ))
                   )}
@@ -422,16 +623,16 @@ export default function RoutesPage() {
                           {delivererRoutes.map((route) => (
                             <TableRow
                               key={route.id}
-                              className="cursor-pointer bg-white border-b border-gray-100 hover:bg-gray-50/50 transition-colors"
+                              className="cursor-pointer bg-white border-b border-gray-100 hover:bg-gray-100 transition-colors"
                               onClick={() => setSelectedRoute(route)}
                             >
-                              <TableCell className="px-6 py-4 bg-white">
+                              <TableCell className="px-6 py-4">
                                 <div className="flex items-center gap-2">
                                   <BiMap className="size-4 text-gray-400" />
                                   <span className="text-gray-900">{route.route_name}</span>
                                 </div>
                               </TableCell>
-                              <TableCell className="px-6 py-4 bg-white text-gray-600">{route.leaflet_count || 0}</TableCell>
+                              <TableCell className="px-6 py-4 text-gray-600">{route.leaflet_count || 0}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -451,9 +652,9 @@ export default function RoutesPage() {
             <div className="px-4 pt-4 pb-3 border-b border-gray-100">
               <FilterTabs
                 tabs={[
-                  { id: "by-route", label: "By Route", count: tabCounts["by-route"] },
-                  { id: "by-deliverer", label: "By Deliverer", count: tabCounts["by-deliverer"] },
-                  { id: "open-routes", label: "Open Routes", count: tabCounts["open-routes"] },
+                  { id: "by-route", label: "Assigned Routes", count: tabCounts["by-route"], icon: <RouteIcon className="size-5" /> },
+                  { id: "by-deliverer", label: "Deliverers", count: tabCounts["by-deliverer"], icon: <DelivererIcon className="size-5" /> },
+                  { id: "open-routes", label: "Open routes", count: tabCounts["open-routes"], icon: <UnassignedIcon className="size-5" /> },
                 ]}
                 activeTab={activeTab}
                 onTabChange={(tabId) => setActiveTab(tabId as TabId)}
@@ -467,14 +668,13 @@ export default function RoutesPage() {
                   <TableRow className="border-b border-gray-200 bg-white hover:bg-white">
                     <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Route Name</TableHead>
                     <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Leaflets</TableHead>
-                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Route Type</TableHead>
                     <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {routes.length === 0 ? (
                     <TableRow className="border-b border-gray-100">
-                      <TableCell colSpan={4} className="text-center py-12 text-gray-500 bg-white">
+                      <TableCell colSpan={3} className="text-center py-12 text-gray-500 bg-white">
                         No open routes found
                       </TableCell>
                     </TableRow>
@@ -482,19 +682,25 @@ export default function RoutesPage() {
                     routes.map((route) => (
                       <TableRow
                         key={route.id}
-                        className="cursor-pointer bg-white border-b border-gray-100 hover:bg-gray-50/50 transition-colors"
+                        className="cursor-pointer bg-white border-b border-gray-100 hover:bg-gray-100 transition-colors"
                         onClick={() => setSelectedRoute(route)}
                       >
-                        <TableCell className="px-6 py-4 bg-white font-medium text-gray-900">{route.route_name}</TableCell>
-                        <TableCell className="px-6 py-4 bg-white text-gray-600">{route.leaflet_count || 0}</TableCell>
-                        <TableCell className="px-6 py-4 bg-white text-gray-600">{route.route_type || "—"}</TableCell>
-                        <TableCell className="px-6 py-4 bg-white">
+                        <TableCell className="px-6 py-4">
+                          <div className="font-medium text-gray-900">{route.route_name}</div>
+                          {route.route_type && (
+                            <div className="text-sm text-gray-500 mt-1">
+                              {route.route_type}
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="px-6 py-4 text-gray-600">{route.leaflet_count || 0}</TableCell>
+                        <TableCell className="px-6 py-4">
                           <Button
                             variant="secondary"
                             size="sm"
                             onClick={(e) => handleAssignClick(route, e)}
                           >
-                            Assign
+                            {route.is_skipped ? "Assign temp deliverer" : "Assign deliverer"}
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -763,6 +969,93 @@ export default function RoutesPage() {
               disabled={!selectedDelivererId || isAssigning || peopleLoading}
             >
               {isAssigning ? "Assigning..." : "Assign Route"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Unassign Confirmation Modal */}
+      <Modal
+        isOpen={unassignModalOpen}
+        onClose={() => {
+          setUnassignModalOpen(false);
+          setRouteToUnassign(null);
+        }}
+        title="Unassign Route"
+        size="md"
+      >
+        <div className="space-y-6">
+          {routeToUnassign && (
+            <div>
+              <p className="text-gray-700">
+                Are you sure you want to unassign <strong>{routeToUnassign.route_name}</strong> from{" "}
+                <strong>{getDelivererName(routeToUnassign)}</strong>?
+              </p>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setUnassignModalOpen(false);
+                setRouteToUnassign(null);
+              }}
+              disabled={isUnassigning}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleUnassignConfirm}
+              disabled={isUnassigning}
+            >
+              {isUnassigning ? "Unassigning..." : "Unassign"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Mark as Temp Confirmation Modal */}
+      <Modal
+        isOpen={markAsTempModalOpen}
+        onClose={() => {
+          setMarkAsTempModalOpen(false);
+          setRouteToMarkAsTemp(null);
+        }}
+        title="Mark Route as Temporary"
+        size="md"
+      >
+        <div className="space-y-6">
+          {routeToMarkAsTemp && (
+            <div>
+              <p className="text-gray-700">
+                Are you sure you want to mark <strong>{routeToMarkAsTemp.route_name}</strong> as temporary?
+              </p>
+              <p className="text-sm text-gray-500 mt-2">
+                This will mark the route as skipped/temporary. The route will remain assigned to{" "}
+                <strong>{getDelivererName(routeToMarkAsTemp)}</strong>.
+              </p>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setMarkAsTempModalOpen(false);
+                setRouteToMarkAsTemp(null);
+              }}
+              disabled={isMarkingAsTemp}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleMarkAsTempConfirm}
+              disabled={isMarkingAsTemp}
+            >
+              {isMarkingAsTemp ? "Marking..." : "Mark as Temporary"}
             </Button>
           </div>
         </div>

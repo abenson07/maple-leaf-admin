@@ -14,6 +14,7 @@ import { ErrorMessage } from "@/components/ErrorMessage";
 import { TableSkeleton } from "@/components/skeletons";
 import { showToast } from "@/lib/toast";
 import type { PeopleInsert } from "@/types/database";
+import { Deliverer2Icon, MemberIcon, DuplicateMembersIcon } from "@/components/icons";
 
 type TabId = "all" | "members" | "duplicates";
 
@@ -257,9 +258,9 @@ export default function PeoplePage() {
             <div className="px-4 pt-4 pb-3 border-b border-gray-100">
               <FilterTabs
                 tabs={[
-                  { id: "all", label: "All Neighbors", count: tabCounts.all },
-                  { id: "members", label: "Members", count: tabCounts.members },
-                  { id: "duplicates", label: "Duplicates", count: tabCounts.duplicates },
+                  { id: "all", label: "All Neighbors", count: tabCounts.all, icon: <Deliverer2Icon className="size-5" /> },
+                  { id: "members", label: "Members", count: tabCounts.members, icon: <MemberIcon className="size-5" /> },
+                  { id: "duplicates", label: "Duplicates", count: tabCounts.duplicates, icon: <DuplicateMembersIcon className="size-5" /> },
                 ]}
                 activeTab={activeTab}
                 onTabChange={(tabId) => setActiveTab(tabId as TabId)}

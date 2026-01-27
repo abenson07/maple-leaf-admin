@@ -250,7 +250,7 @@ export default function BusinessesPage() {
                 <TableBody>
                   {businesses.length === 0 ? (
                     <TableRow className="border-b border-gray-100">
-                      <TableCell colSpan={7} className="text-center py-12 text-gray-500 bg-white">
+                      <TableCell colSpan={7} className="text-center py-12 text-gray-500">
                         No businesses found
                       </TableCell>
                     </TableRow>
@@ -263,23 +263,23 @@ export default function BusinessesPage() {
                       return (
                         <TableRow
                           key={business.id}
-                          className="cursor-pointer bg-white border-b border-gray-100 hover:bg-gray-50/50 transition-colors"
+                          className="group cursor-pointer bg-white border-b border-gray-100 hover:bg-gray-100 transition-colors"
                           onClick={() => setSelectedBusiness(business)}
                         >
-                          <TableCell className="px-6 py-4 bg-white font-medium text-gray-900">
+                          <TableCell className="px-6 py-4 font-medium text-gray-900">
                             {business.business_name || "—"}
                           </TableCell>
-                          <TableCell className="px-6 py-4 bg-white text-gray-600">{business.contact_name || "—"}</TableCell>
-                          <TableCell className="px-6 py-4 bg-white">
+                          <TableCell className="px-6 py-4 text-gray-600">{business.contact_name || "—"}</TableCell>
+                          <TableCell className="px-6 py-4">
                             {business.email ? (
                               <CopyableText text={business.email} showIcon={true} />
                             ) : (
                               <span className="text-gray-400">—</span>
                             )}
                           </TableCell>
-                          <TableCell className="px-6 py-4 bg-white text-gray-600">{business.phone || "—"}</TableCell>
-                          <TableCell className="px-6 py-4 bg-white text-gray-600">{business.address || "—"}</TableCell>
-                          <TableCell className="px-6 py-4 bg-white">
+                          <TableCell className="px-6 py-4 text-gray-600">{business.phone || "—"}</TableCell>
+                          <TableCell className="px-6 py-4 text-gray-600">{business.address || "—"}</TableCell>
+                          <TableCell className="px-6 py-4">
                             <div className="flex flex-wrap gap-1">
                               {tags.length > 0 ? (
                                 tags.map((tag) => (
@@ -304,7 +304,7 @@ export default function BusinessesPage() {
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="px-6 py-4 bg-white">
+                          <TableCell className="px-6 py-4">
                             <Badge
                               variant={status === "Active" ? "default" : "outline"}
                               className={status === "Active" ? "bg-success/10 text-success" : ""}
