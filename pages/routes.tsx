@@ -528,9 +528,23 @@ export default function RoutesPage() {
                         className="cursor-pointer border-b border-gray-100 hover:bg-gray-100 transition-colors"
                         onClick={() => setSelectedRoute(route)}
                       >
-                        <TableCell className="px-6 py-4 font-medium text-gray-900">{route.route_name}</TableCell>
+                        <TableCell className="px-6 py-4">
+                          <div className="font-medium text-gray-900">{route.route_name}</div>
+                          {route.route_type && (
+                            <div className="text-sm text-gray-500 mt-1">
+                              {route.route_type}
+                            </div>
+                          )}
+                        </TableCell>
                         <TableCell className="px-6 py-4 text-gray-600">{route.leaflet_count || 0}</TableCell>
-                        <TableCell className="px-6 py-4 text-gray-600">{getDelivererName(route)}</TableCell>
+                        <TableCell className="px-6 py-4">
+                          <div className="text-gray-600">{getDelivererName(route)}</div>
+                          {(route.primary_deliverer?.email || route.primary_deliverer_email) && (
+                            <div className="text-sm text-gray-500 mt-1">
+                              {route.primary_deliverer?.email || route.primary_deliverer_email}
+                            </div>
+                          )}
+                        </TableCell>
                         <TableCell className="p-2 text-left">
                           <div className="flex flex-row gap-2">
                             <button
@@ -662,7 +676,14 @@ export default function RoutesPage() {
                               <TableCell className="px-6 py-4">
                                 <div className="flex items-center gap-2">
                                   <BiMap className="size-4 text-gray-400" />
-                                  <span className="text-gray-900">{route.route_name}</span>
+                                  <div>
+                                    <span className="text-gray-900">{route.route_name}</span>
+                                    {route.route_type && (
+                                      <div className="text-sm text-gray-500 mt-1">
+                                        {route.route_type}
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               </TableCell>
                               <TableCell className="px-6 py-4 text-gray-600">{route.leaflet_count || 0}</TableCell>
