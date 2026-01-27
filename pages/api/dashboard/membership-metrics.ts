@@ -11,8 +11,10 @@ export const config = {
 };
 
 // Initialize Stripe with secret key
+// Cloudflare Workers use the Fetch API for their API requests
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   typescript: true,
+  httpClient: Stripe.createFetchHttpClient(),
 });
 
 // Membership product IDs
