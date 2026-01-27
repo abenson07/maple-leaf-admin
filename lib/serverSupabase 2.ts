@@ -42,3 +42,5 @@ function getServerSupabaseClient() {
 }
 
 export const serverSupabase = getServerSupabaseClient()
+
+

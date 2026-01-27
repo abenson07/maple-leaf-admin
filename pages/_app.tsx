@@ -1,5 +1,6 @@
 import type { AppProps } from "next/app";
 import Head from "next/head";
+import { useRouter } from "next/router";
 import { Toaster } from "react-hot-toast";
 import { ApplicationShell4 } from "@/components/ui/ApplicationShell";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -7,6 +8,9 @@ import { SkipLink } from "@/components/SkipLink";
 import "../styles/globals.css";
 
 export default function App({ Component, pageProps }: AppProps) {
+  const router = useRouter();
+  const isLoginPage = router.pathname === "/login";
+
   return (
     <>
       <Head>
@@ -16,35 +20,65 @@ export default function App({ Component, pageProps }: AppProps) {
       </Head>
       <SkipLink />
       <ErrorBoundary>
-        <ApplicationShell4>
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: "#fff",
-                color: "#333",
-              },
-              success: {
-                duration: 3000,
-                iconTheme: {
-                  primary: "#6b8e23",
-                  secondary: "#fff",
-                },
-              },
-              error: {
+        {isLoginPage ? (
+          <>
+            <Toaster
+              position="top-right"
+              toastOptions={{
                 duration: 4000,
-                iconTheme: {
-                  primary: "#ef4444",
-                  secondary: "#fff",
+                style: {
+                  background: "#fff",
+                  color: "#333",
                 },
-              },
-            }}
-          />
-          <main id="main-content">
+                success: {
+                  duration: 3000,
+                  iconTheme: {
+                    primary: "#6b8e23",
+                    secondary: "#fff",
+                  },
+                },
+                error: {
+                  duration: 4000,
+                  iconTheme: {
+                    primary: "#ef4444",
+                    secondary: "#fff",
+                  },
+                },
+              }}
+            />
             <Component {...pageProps} />
-          </main>
-        </ApplicationShell4>
+          </>
+        ) : (
+          <ApplicationShell4>
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: "#fff",
+                  color: "#333",
+                },
+                success: {
+                  duration: 3000,
+                  iconTheme: {
+                    primary: "#6b8e23",
+                    secondary: "#fff",
+                  },
+                },
+                error: {
+                  duration: 4000,
+                  iconTheme: {
+                    primary: "#ef4444",
+                    secondary: "#fff",
+                  },
+                },
+              }}
+            />
+            <main id="main-content">
+              <Component {...pageProps} />
+            </main>
+          </ApplicationShell4>
+        )}
       </ErrorBoundary>
     </>
   );

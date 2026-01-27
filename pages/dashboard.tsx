@@ -2,10 +2,21 @@
 
 import Head from "next/head";
 import { PageHeader1 } from "@/components/ui";
-import { MembershipMetricsWidget } from "@/components/MembershipMetricsWidget";
+import MembershipMetricsWidget from "@/components/ui/MembershipMetricsWidget";
+import { useDashboard } from "@/hooks/useDashboard";
 import { BiSearch } from "react-icons/bi";
 
 export default function Dashboard() {
+  const {
+    chartData,
+    membershipTableRows,
+    membershipMonthLabels,
+    productTableRows,
+    productMonthLabels,
+    loading,
+    error,
+  } = useDashboard();
+
   return (
     <>
       <Head>
@@ -21,7 +32,23 @@ export default function Dashboard() {
           buttons={[]}
         />
         <div className="container mx-auto px-4 pb-8 sm:px-6 md:px-8">
-          <MembershipMetricsWidget />
+          {error ? (
+            <div className="rounded-lg border border-border-primary bg-white p-6">
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="text-error mb-4">Error loading dashboard data</div>
+                <div className="text-text-secondary text-sm">{error}</div>
+              </div>
+            </div>
+          ) : (
+            <MembershipMetricsWidget
+              chartData={chartData}
+              membershipTableRows={membershipTableRows}
+              membershipMonthLabels={membershipMonthLabels}
+              productTableRows={productTableRows}
+              productMonthLabels={productMonthLabels}
+              loading={loading}
+            />
+          )}
         </div>
       </div>
     </>

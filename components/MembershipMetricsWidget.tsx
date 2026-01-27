@@ -2,29 +2,13 @@
 
 import { useDashboard } from "@/hooks/useDashboard";
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
-import { Bar } from "react-chartjs-2";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@relume_io/relume-ui";
-
-// Register Chart.js components
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+  MonthlyRevenueChart,
+  ProductMonthlyAveragesChart,
+  MonthlyBreakdownChart,
+} from "@/components/charts";
 
 export function MembershipMetricsWidget() {
-  const { metrics, loading, error, refetch } = useDashboard();
+  const { data, loading, error, refetch } = useDashboard();
 
   if (loading) {
     return (
@@ -53,62 +37,31 @@ export function MembershipMetricsWidget() {
     );
   }
 
-  if (!metrics) {
+  if (!data || !data.metrics) {
     return null;
   }
 
-  // Prepare chart data
-  const chartData = {
-    labels: metrics.monthlyBreakdown.map((m) => {
-      const [year, month] = m.month.split("-");
-      const date = new Date(parseInt(year), parseInt(month) - 1);
-      // Use deterministic formatting to avoid hydration mismatches
-      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      return `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
-    }),
-    datasets: [
-      {
-        label: "Memberships",
-        data: metrics.monthlyBreakdown.map((m) => m.membershipRevenue),
-        backgroundColor: "#6b8e23",
-      },
-      {
-        label: "Others",
-        data: metrics.monthlyBreakdown.map((m) => m.otherRevenue),
-        backgroundColor: "#8fb347",
-      },
-    ],
-  };
+  const metrics = data.metrics;
+  const productAverages = data.productAverages || [];
 
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: "top" as const,
-      },
-      tooltip: {
-        callbacks: {
-          label: function (context: any) {
-            return `${context.dataset.label}: $${context.parsed.y.toFixed(2)}`;
-          },
-        },
-      },
-    },
-    scales: {
-      x: {
-        stacked: true,
-      },
-      y: {
-        stacked: true,
-        ticks: {
-          callback: function (value: any) {
-            return `$${value}`;
-          },
-        },
-      },
-    },
-  };
+  // Calculate summary metrics
+  const totalRevenue = metrics.reduce((sum, m) => sum + m.membershipRevenue + m.otherRevenue, 0);
+  const totalNewMemberships = metrics.reduce((sum, m) => sum + m.newMemberships, 0);
+  const totalRenewals = metrics.reduce((sum, m) => sum + m.renewals, 0);
+  const totalChurns = metrics.reduce((sum, m) => sum + m.churns, 0);
+  const activeMemberships = totalNewMemberships + totalRenewals - totalChurns;
+  
+  // Get current month (last month in the array)
+  const currentMonth = metrics[metrics.length - 1];
+  const newMembersThisMonth = currentMonth?.newMemberships || 0;
+  const renewalsThisMonth = currentMonth?.renewals || 0;
+
+  // Prepare chart data for ViSX components
+  const monthlyRevenueData = metrics.map((m) => ({
+    month: m.month,
+    membershipRevenue: m.membershipRevenue,
+    otherRevenue: m.otherRevenue,
+  }));
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -125,73 +78,73 @@ export function MembershipMetricsWidget() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-lg border border-border-primary bg-white p-6">
           <div className="text-sm text-text-secondary">Total Members</div>
-          <div className="mt-2 text-3xl font-bold">{metrics.totalMembers}</div>
+          <div className="mt-2 text-3xl font-bold">{totalNewMemberships + totalRenewals}</div>
         </div>
         <div className="rounded-lg border border-border-primary bg-white p-6">
           <div className="text-sm text-text-secondary">Active Memberships</div>
-          <div className="mt-2 text-3xl font-bold">{metrics.activeMemberships}</div>
+          <div className="mt-2 text-3xl font-bold">{Math.max(0, activeMemberships)}</div>
         </div>
         <div className="rounded-lg border border-border-primary bg-white p-6">
           <div className="text-sm text-text-secondary">Total Revenue</div>
-          <div className="mt-2 text-3xl font-bold">{formatCurrency(metrics.totalRevenue)}</div>
+          <div className="mt-2 text-3xl font-bold">{formatCurrency(totalRevenue)}</div>
         </div>
         <div className="rounded-lg border border-border-primary bg-white p-6">
           <div className="text-sm text-text-secondary">This Month</div>
           <div className="mt-2 text-sm">
-            <div>New: {metrics.newMembersThisMonth}</div>
-            <div>Renewals: {metrics.renewalsThisMonth}</div>
+            <div>New: {newMembersThisMonth}</div>
+            <div>Renewals: {renewalsThisMonth}</div>
           </div>
         </div>
       </div>
 
-      {/* Chart */}
+      {/* Monthly Revenue Chart */}
       <div className="rounded-lg border border-border-primary bg-white p-6">
-        <h2 className="text-xl font-semibold mb-4">Monthly Revenue Breakdown</h2>
-        <div className="h-96">
-          <Bar data={chartData} options={chartOptions} />
+        <div className="flex justify-center overflow-x-auto">
+          <div className="min-w-[600px]">
+            <MonthlyRevenueChart data={monthlyRevenueData} width={800} height={400} />
+          </div>
         </div>
       </div>
 
-      {/* Monthly Breakdown Table */}
-      <div className="rounded-lg border border-border-primary bg-white p-6">
-        <h2 className="text-xl font-semibold mb-4">Monthly Breakdown</h2>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Month</TableHead>
-                <TableHead className="text-right">Total Revenue</TableHead>
-                <TableHead className="text-right">Membership Revenue</TableHead>
-                <TableHead className="text-right">Other Revenue</TableHead>
-                <TableHead className="text-right">New Members</TableHead>
-                <TableHead className="text-right">Renewals</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {metrics.monthlyBreakdown.map((month, index) => {
-                const [year, monthNum] = month.month.split("-");
-                const date = new Date(parseInt(year), parseInt(monthNum) - 1);
-                // Use deterministic formatting to avoid hydration mismatches
-                const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-                const monthLabel = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
-
-                return (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">{monthLabel}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(month.totalRevenue)}</TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(month.membershipRevenue)}
-                    </TableCell>
-                    <TableCell className="text-right">{formatCurrency(month.otherRevenue)}</TableCell>
-                    <TableCell className="text-right">{month.newMembers}</TableCell>
-                    <TableCell className="text-right">{month.renewals}</TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+      {/* Historical Monthly Averages by Product */}
+      {productAverages.length > 0 && (
+        <div className="rounded-lg border border-border-primary bg-white p-6">
+          <ProductMonthlyAveragesChart 
+            data={productAverages.map(product => ({
+              product: product.productName,
+              monthlyAverages: [
+                { month: '2000-01', average: product.monthlyAverages.January },
+                { month: '2000-02', average: product.monthlyAverages.February },
+                { month: '2000-03', average: product.monthlyAverages.March },
+                { month: '2000-04', average: product.monthlyAverages.April },
+                { month: '2000-05', average: product.monthlyAverages.May },
+                { month: '2000-06', average: product.monthlyAverages.June },
+                { month: '2000-07', average: product.monthlyAverages.July },
+                { month: '2000-08', average: product.monthlyAverages.August },
+                { month: '2000-09', average: product.monthlyAverages.September },
+                { month: '2000-10', average: product.monthlyAverages.October },
+                { month: '2000-11', average: product.monthlyAverages.November },
+                { month: '2000-12', average: product.monthlyAverages.December },
+              ]
+            }))} 
+          />
         </div>
-      </div>
+      )}
+
+      {/* Monthly Breakdown Chart */}
+      {metrics.length > 0 && (
+        <div className="rounded-lg border border-border-primary bg-white p-6">
+          <div className="flex justify-center overflow-x-auto">
+            <div className="min-w-[600px]">
+              <MonthlyBreakdownChart
+                data={metrics}
+                width={800}
+                height={400}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

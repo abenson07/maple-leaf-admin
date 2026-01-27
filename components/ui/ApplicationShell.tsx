@@ -17,6 +17,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { RxChevronDown, RxChevronRight, RxCross2 } from "react-icons/rx";
 import { BiBell, BiSearch } from "react-icons/bi";
 import Link from "next/link";
+import { useRouter } from "next/router";
+import { showToast } from "@/lib/toast";
 
 type ImageProps = {
   url?: string;
@@ -44,11 +46,31 @@ export const ApplicationShell6 = (props: ApplicationShell6Props) => {
     ...props,
   };
 
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchIconClicked, setIsSearchIconClicked] = useState<boolean>(false);
   const searchBarRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const isMobile = useMediaQuery("(max-width: 991px)");
+
+  const handleLogout = async () => {
+    try {
+      const basePath = router.basePath || "";
+      const response = await fetch(`${basePath}/api/auth/logout`, {
+        method: "POST",
+      });
+
+      if (response.ok) {
+        showToast.success("Logged out successfully");
+        router.push("/login");
+      } else {
+        showToast.error("Error logging out");
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+      showToast.error("Error logging out");
+    }
+  };
   useEffect(() => {
     if (!isSearchIconClicked) {
       return;
@@ -227,7 +249,12 @@ export const ApplicationShell6 = (props: ApplicationShell6Props) => {
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="mx-4 bg-gray-200" />
                   <DropdownMenuItem className="hover:bg-gray-50 transition-colors">
-                    <a href="#" className="text-gray-700 hover:text-[#464D3F]">Log Out</a>
+                    <button
+                      onClick={handleLogout}
+                      className="text-gray-700 hover:text-[#464D3F] w-full text-left"
+                    >
+                      Log Out
+                    </button>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
               </DropdownMenuContent>

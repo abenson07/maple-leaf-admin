@@ -11,7 +11,7 @@ export const useDashboard = () => {
       setLoading(true);
       setError(null);
 
-      // Include basePath for API routes
+      // API routes require basePath prefix with OpenNext Cloudflare adapter
       const basePath = '/dashboard';
       const apiUrl = typeof window !== 'undefined' && window.location.origin
         ? `${window.location.origin}${basePath}/api/dashboard/membership-metrics`
@@ -71,7 +71,7 @@ export const useDashboard = () => {
   const membershipMonthLabels = data?.metrics.map(m => m.monthLabel) || [];
   
   // Get month labels for product table (just month names, not year)
-  const productMonthLabels = monthOrder.map(month => month.substring(0, 3).toUpperCase()); // JAN, FEB, etc.
+  const productMonthLabels = monthOrder.map(month => month.substring(0, 3)); // Jan, Feb, etc.
 
   return {
     data,
@@ -85,3 +85,4 @@ export const useDashboard = () => {
     refetch: fetchDashboardData,
   };
 };
+
