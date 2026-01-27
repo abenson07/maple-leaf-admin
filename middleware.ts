@@ -26,11 +26,18 @@ function getSessionCookie(request: NextRequest): string | null {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // #region agent log
+  console.error('[DEBUG middleware] pathname:', pathname, 'url:', request.url);
+  // #endregion
+
   // With basePath: '/dashboard', Next.js strips the basePath from pathname
   // So /dashboard/login becomes /login, /dashboard/api/auth becomes /api/auth, etc.
 
   // Allow access to login page
   if (pathname === '/login') {
+    // #region agent log
+    console.error('[DEBUG middleware] Login page path matched');
+    // #endregion
     // If already authenticated (has valid token format), redirect to home
     const sessionToken = getSessionCookie(request);
     if (isValidTokenFormat(sessionToken)) {
@@ -41,6 +48,9 @@ export function middleware(request: NextRequest) {
 
   // Allow access to API routes (they handle their own auth with full session verification)
   if (pathname.startsWith('/api/')) {
+    // #region agent log
+    console.error('[DEBUG middleware] API route allowed through:', pathname);
+    // #endregion
     return NextResponse.next();
   }
 
@@ -48,6 +58,9 @@ export function middleware(request: NextRequest) {
   // Note: This is a basic format check. Full verification happens in API routes.
   const sessionToken = getSessionCookie(request);
   if (!isValidTokenFormat(sessionToken)) {
+    // #region agent log
+    console.error('[DEBUG middleware] Redirecting to login - no valid token, pathname:', pathname);
+    // #endregion
     // Redirect to login
     const loginUrl = new URL('/login', request.url);
     // Preserve the original URL as a query parameter for redirect after login
@@ -55,6 +68,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // #region agent log
+  console.error('[DEBUG middleware] Allowing request through:', pathname);
+  // #endregion
   return NextResponse.next();
 }
 

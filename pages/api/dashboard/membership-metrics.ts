@@ -275,6 +275,10 @@ async function fetchMembershipMetrics(months: { month: string; startDate: Date; 
   renewals: Map<string, number>;
   churns: Map<string, number>;
 }> {
+  // #region agent log
+  console.error('[DEBUG] fetchMembershipMetrics called, months:', months.length);
+  // #endregion
+  
   const newMembershipsMap = new Map<string, number>();
   const renewalsMap = new Map<string, number>();
   const churnsMap = new Map<string, number>();
@@ -287,11 +291,19 @@ async function fetchMembershipMetrics(months: { month: string; startDate: Date; 
   });
   
   try {
+    // #region agent log
+    console.error('[DEBUG] About to query serverSupabase.from("memberships")');
+    // #endregion
+    
     // Fetch all memberships with relevant data
     const { data: memberships, error } = await serverSupabase
       .from('memberships')
       .select('id, created_at, last_renewal, status')
       .order('created_at', { ascending: true }) as { data: Memberships[] | null; error: any };
+    
+    // #region agent log
+    console.error('[DEBUG] Supabase query completed - hasData:', !!memberships, 'hasError:', !!error, 'count:', memberships?.length || 0, 'error:', error?.message);
+    // #endregion
     
     if (error) {
       console.error('Error fetching memberships:', error);
@@ -401,12 +413,19 @@ async function fetchMembershipMetrics(months: { month: string; startDate: Date; 
  * API Handler for membership metrics dashboard
  */
 async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // #region agent log
+  console.error('[DEBUG API] handler called, method:', req.method, 'url:', req.url);
+  // #endregion
+  
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
+    // #region agent log
+    console.error('[DEBUG API] Starting handler execution');
+    // #endregion
     // Get last 12 months
     const months = getLast12Months();
     
@@ -436,12 +455,23 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       productIds: [] as string[],
     };
     
+    // #region agent log
+    console.error('[DEBUG API] About to call fetchMembershipMetrics, months:', months.length);
+    // #endregion
+    
     const [membershipMetrics] = await Promise.all([
       fetchMembershipMetrics(months).catch(err => {
+        // #region agent log
+        console.error('[DEBUG API] fetchMembershipMetrics error:', err instanceof Error ? err.message : String(err));
+        // #endregion
         console.error('Error in fetchMembershipMetrics:', err);
         throw err;
       }),
     ]);
+    
+    // #region agent log
+    console.error('[DEBUG API] fetchMembershipMetrics completed, hasMetrics:', !!membershipMetrics);
+    // #endregion
     
     // Combine data into MonthlyMetric array
     const metrics: MonthlyMetric[] = months.map(({ month, monthLabel }) => ({
@@ -495,6 +525,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     const errorStack = error instanceof Error ? error.stack : undefined;
+    // #region agent log
+    console.error('[DEBUG API] Handler error caught:', errorMessage);
+    console.error('[DEBUG API] Error stack:', errorStack?.substring(0, 500));
+    // #endregion
     console.error('Error fetching dashboard metrics:', errorMessage);
     console.error('Error stack:', errorStack);
     console.error('Full error object:', error);
