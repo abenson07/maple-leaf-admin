@@ -1,4 +1,4 @@
-// COMMENTED OUT - Dashboard disabled due to Stripe bundling issue with Webflow Cloud
+// COMMENTED OUT - Dashboard disabled
 // "use client";
 
 // import Head from "next/head";
@@ -65,7 +65,7 @@ export default function Dashboard() {
         <div className="flex flex-col items-center justify-center py-12">
           <div className="text-error mb-4">Dashboard Temporarily Disabled</div>
           <div className="text-text-secondary text-sm">
-            The dashboard is currently disabled due to Stripe bundling compatibility issues with Webflow Cloud.
+            The dashboard is currently disabled.
           </div>
         </div>
       </div>

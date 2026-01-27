@@ -372,7 +372,7 @@ export const ApplicationShell6Defaults: Props = {
     alt: "MLCC Dashboard",
   },
   navLinks: [
-    // { title: "Dashboard", url: "/dashboard" }, // Commented out - Stripe bundling issue
+    // { title: "Dashboard", url: "/dashboard" },
     { title: "Neighbors", url: "/people" },
     { title: "Routes", url: "/routes" },
     { title: "Businesses", url: "/businesses" },
