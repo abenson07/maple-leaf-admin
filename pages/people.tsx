@@ -302,31 +302,23 @@ export default function PeoplePage() {
                             onClick={() => setSelectedPerson(person)}
                           >
                             <TableCell className="px-6 py-4">
-                              <div className="grid grid-cols-[max-content_1fr] items-center gap-3">
-                                <div 
-                                  className={`relative flex size-10 items-center justify-center rounded-full font-semibold text-sm ${person.full_name ? getAvatarColor(person.full_name) : "bg-gray-100 text-gray-600"}`}
-                                  style={person.full_name ? getAvatarBackground() : {}}
-                                >
-                                  {person.full_name ? getInitials(person.full_name) : <BiUser className="size-5" />}
-                                </div>
-                                <div className="w-full max-w-lg">
-                                  <div className="font-medium text-gray-900">{person.full_name || "—"}</div>
-                                  {person.email ? (
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        navigator.clipboard.writeText(person.email || "");
-                                        showToast.success("Copied to clipboard");
-                                      }}
-                                      className="text-sm font-normal text-gray-600 hover:text-gray-900 cursor-pointer mt-0.5"
-                                      aria-label="Copy email to clipboard"
-                                    >
-                                      {person.email}
-                                    </button>
-                                  ) : (
-                                    <span className="text-sm text-gray-400">—</span>
-                                  )}
-                                </div>
+                              <div className="w-full max-w-lg">
+                                <div className="font-medium text-gray-900">{person.full_name || "—"}</div>
+                                {person.email ? (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigator.clipboard.writeText(person.email || "");
+                                      showToast.success("Copied to clipboard");
+                                    }}
+                                    className="text-sm font-normal text-gray-600 hover:text-gray-900 cursor-pointer mt-0.5"
+                                    aria-label="Copy email to clipboard"
+                                  >
+                                    {person.email}
+                                  </button>
+                                ) : (
+                                  <span className="text-sm text-gray-400">—</span>
+                                )}
                               </div>
                             </TableCell>
                             <TableCell className="px-6 py-4 text-gray-600">{person.address || "—"}</TableCell>
