@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import Stripe from 'stripe';
+// import Stripe from 'stripe'; // Commented out - Stripe bundling issue with Webflow Cloud
 import { serverSupabase } from '@/lib/serverSupabase';
 import { MonthlyMetric, ProductMonthlyAverages } from '@/data/dashboard';
 
@@ -12,10 +12,11 @@ export const config = {
 
 // Initialize Stripe with secret key
 // Cloudflare Workers use the Fetch API for their API requests
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  typescript: true,
-  httpClient: Stripe.createFetchHttpClient(),
-});
+// COMMENTED OUT - Stripe bundling issue with Webflow Cloud/OpenNext
+// const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+//   typescript: true,
+//   httpClient: Stripe.createFetchHttpClient(),
+// });
 
 // Membership product IDs
 const MEMBERSHIP_PRODUCT_IDS = [
@@ -91,28 +92,28 @@ function isMembershipProduct(productId: string | null | undefined): boolean {
 /**
  * Fetch revenue data from Stripe, categorized by membership vs other
  * Returns maps for both membership and other revenue grouped by month (YYYY-MM)
+ * COMMENTED OUT - Stripe bundling issue with Webflow Cloud/OpenNext
  */
-async function fetchStripeRevenue(
+async function fetchStripeRevenue_DISABLED(
   months: { month: string; startDate: Date; endDate: Date }[]
 ): Promise<{
   membershipRevenue: Map<string, number>;
   otherRevenue: Map<string, number>;
 }> {
+  // COMMENTED OUT - Stripe bundling issue
+  // Return empty data
   const membershipRevenueMap = new Map<string, number>();
   const otherRevenueMap = new Map<string, number>();
-  
-  // Initialize all months to 0
   months.forEach(m => {
     membershipRevenueMap.set(m.month, 0);
     otherRevenueMap.set(m.month, 0);
   });
+  return { membershipRevenue: membershipRevenueMap, otherRevenue: otherRevenueMap };
   
+  /* ORIGINAL STRIPE CODE - COMMENTED OUT
   try {
-    // Calculate the start date (12 months ago, first day of that month)
     const startDate = months[0].startDate;
     const endDate = months[months.length - 1].endDate;
-    
-    // Fetch invoices that were paid in the last 12 months
     let hasMore = true;
     let startingAfter: string | undefined = undefined;
     
@@ -127,36 +128,24 @@ async function fetchStripeRevenue(
         starting_after: startingAfter,
       });
       
-      // Process each invoice
       for (const invoice of invoices.data) {
-        // Only count subscription invoices
-        // Note: subscription can be string | Stripe.Subscription | null
         const invoiceWithSubscription = invoice as Stripe.Invoice & { subscription?: string | Stripe.Subscription | null };
         if (!invoiceWithSubscription.subscription) continue;
         
-        // Get the payment date (when invoice was paid)
         const paidDate = invoice.status_transitions.paid_at 
           ? new Date(invoice.status_transitions.paid_at * 1000)
           : new Date(invoice.created * 1000);
         
-        // Determine which month this payment belongs to
         const paymentMonth = `${paidDate.getFullYear()}-${String(paidDate.getMonth() + 1).padStart(2, '0')}`;
-        
-        // Skip if not in our target months
         if (!membershipRevenueMap.has(paymentMonth)) continue;
         
-        // Get product ID from the first line item
-        // Note: price.product is always a string ID in list responses, not expanded
         if (!invoice.lines?.data || invoice.lines.data.length === 0) continue;
         const firstLineItem = invoice.lines.data[0];
         const price = (firstLineItem as any).price as Stripe.Price | string | undefined;
         if (!price) continue;
         const productId = (typeof price === 'string' ? price : price.product) as string;
-        
-        // Get amount in dollars (Stripe amounts are in cents)
         const amount = (invoice.amount_paid || 0) / 100;
         
-        // Categorize revenue
         if (isMembershipProduct(productId)) {
           const currentAmount = membershipRevenueMap.get(paymentMonth) || 0;
           membershipRevenueMap.set(paymentMonth, currentAmount + amount);
@@ -176,8 +165,7 @@ async function fetchStripeRevenue(
   } catch (error) {
     console.error('Error fetching Stripe revenue:', error);
   }
-  
-  return { membershipRevenue: membershipRevenueMap, otherRevenue: otherRevenueMap };
+  */
 }
 
 /**
@@ -191,23 +179,29 @@ function getProductName(productId: string): string {
  * Fetch historical monthly averages per product
  * Returns average revenue per month across all years for each product
  * Optimized: Limited to last 5 years for performance
+ * COMMENTED OUT - Stripe bundling issue with Webflow Cloud/OpenNext
  */
-async function fetchProductMonthlyAverages(): Promise<{
+async function fetchProductMonthlyAverages_DISABLED(): Promise<{
   productData: Map<string, Map<string, { total: number; years: Set<number> }>>;
   productIds: string[];
 }> {
-  // Structure: Map<productId, Map<monthName, { total, years }>>
+  // COMMENTED OUT - Stripe bundling issue
+  // Return empty data
+  return {
+    productData: new Map<string, Map<string, { total: number; years: Set<number> }>>(),
+    productIds: [],
+  };
+  
+  /* ORIGINAL STRIPE CODE - COMMENTED OUT
   const productData = new Map<string, Map<string, { total: number; years: Set<number> }>>();
   const productIdsSet = new Set<string>();
   
   try {
-    // Calculate date range: last 5 years (optimized for performance)
     const now = new Date();
-    const fiveYearsAgo = new Date(now.getFullYear() - 5, 0, 1); // January 1st, 5 years ago
+    const fiveYearsAgo = new Date(now.getFullYear() - 5, 0, 1);
     const startTimestamp = Math.floor(fiveYearsAgo.getTime() / 1000);
     const endTimestamp = Math.floor(now.getTime() / 1000);
     
-    // Fetch invoices from last 5 years only
     let hasMore = true;
     let startingAfter: string | undefined = undefined;
     
@@ -222,9 +216,7 @@ async function fetchProductMonthlyAverages(): Promise<{
         starting_after: startingAfter,
       });
       
-      // Process each invoice (including both subscription and one-time payments)
       for (const invoice of invoices.data) {
-        // Get the payment date
         const paidDate = invoice.status_transitions.paid_at 
           ? new Date(invoice.status_transitions.paid_at * 1000)
           : new Date(invoice.created * 1000);
@@ -232,8 +224,6 @@ async function fetchProductMonthlyAverages(): Promise<{
         const monthName = MONTH_NAMES[paidDate.getMonth()];
         const year = paidDate.getFullYear();
         
-        // Get product ID from the first line item
-        // Note: price.product is always a string ID in list responses, not expanded
         if (!invoice.lines?.data || invoice.lines.data.length === 0) continue;
         const firstLineItem = invoice.lines.data[0];
         const price = (firstLineItem as any).price as Stripe.Price | string | undefined;
@@ -241,21 +231,14 @@ async function fetchProductMonthlyAverages(): Promise<{
         const productId = (typeof price === 'string' ? price : price.product) as string;
         
         if (!productId) continue;
-        
-        // Track product ID
         productIdsSet.add(productId);
-        
-        // Get amount in dollars
         const amount = (invoice.amount_paid || 0) / 100;
         
-        // Initialize product map if needed
         if (!productData.has(productId)) {
           productData.set(productId, new Map());
         }
         
         const monthMap = productData.get(productId)!;
-        
-        // Initialize month data if needed
         if (!monthMap.has(monthName)) {
           monthMap.set(monthName, { total: 0, years: new Set<number>() });
         }
@@ -280,6 +263,7 @@ async function fetchProductMonthlyAverages(): Promise<{
     productData,
     productIds: Array.from(productIdsSet),
   };
+  */
 }
 
 /**
@@ -425,18 +409,35 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     // Get last 12 months
     const months = getLast12Months();
     
-    // Fetch data from Stripe and Supabase in parallel
-    const [revenueData, membershipMetrics, productData] = await Promise.all([
-      fetchStripeRevenue(months).catch(err => {
-        console.error('Error in fetchStripeRevenue:', err);
-        throw err;
-      }),
+    // Fetch data from Supabase (Stripe calls disabled due to bundling issue)
+    // const [revenueData, membershipMetrics, productData] = await Promise.all([
+    //   fetchStripeRevenue(months).catch(err => {
+    //     console.error('Error in fetchStripeRevenue:', err);
+    //     throw err;
+    //   }),
+    //   fetchMembershipMetrics(months).catch(err => {
+    //     console.error('Error in fetchMembershipMetrics:', err);
+    //     throw err;
+    //   }),
+    //   fetchProductMonthlyAverages().catch(err => {
+    //     console.error('Error in fetchProductMonthlyAverages:', err);
+    //     throw err;
+    //   }),
+    // ]);
+    
+    // Return empty data for Stripe-related metrics (disabled)
+    const revenueData = {
+      membershipRevenue: new Map<string, number>(),
+      otherRevenue: new Map<string, number>(),
+    };
+    const productData = {
+      productData: new Map<string, Map<string, { total: number; years: Set<number> }>>(),
+      productIds: [] as string[],
+    };
+    
+    const [membershipMetrics] = await Promise.all([
       fetchMembershipMetrics(months).catch(err => {
         console.error('Error in fetchMembershipMetrics:', err);
-        throw err;
-      }),
-      fetchProductMonthlyAverages().catch(err => {
-        console.error('Error in fetchProductMonthlyAverages:', err);
         throw err;
       }),
     ]);
