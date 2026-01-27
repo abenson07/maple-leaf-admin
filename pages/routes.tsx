@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import Head from "next/head";
 import { PageHeader1 } from "@/components/ui";
 import { FilterTabs, useFilterTabs } from "@/components/ui";
-import { useRoutes, RouteWithDeliverer } from "@/hooks";
+import { useRoutes, RouteWithDeliverer, usePeople } from "@/hooks";
 import {
   Table,
   TableBody,
@@ -18,6 +18,8 @@ import {
 import { BiSearch, BiMap, BiX } from "react-icons/bi";
 import { ErrorMessage } from "@/components/ErrorMessage";
 import { TableSkeleton } from "@/components/skeletons";
+import { Modal } from "@/components/Modal";
+import { showToast } from "@/lib/toast";
 
 type TabId = "by-route" | "by-deliverer" | "open-routes";
 
@@ -25,6 +27,15 @@ export default function RoutesPage() {
   const { activeTab, setActiveTab } = useFilterTabs("by-route");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRoute, setSelectedRoute] = useState<RouteWithDeliverer | null>(null);
+  const [assignModalOpen, setAssignModalOpen] = useState(false);
+  const [routeToAssign, setRouteToAssign] = useState<RouteWithDeliverer | null>(null);
+  const [selectedDelivererId, setSelectedDelivererId] = useState<string>("");
+  const [isAssigning, setIsAssigning] = useState(false);
+  const [delivererSearchQuery, setDelivererSearchQuery] = useState("");
+  const [showDelivererDropdown, setShowDelivererDropdown] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const delivererInputRef = useRef<HTMLInputElement>(null);
+  const delivererDropdownRef = useRef<HTMLDivElement>(null);
 
   // Determine filters based on active tab
   const filters = useMemo(() => {
@@ -43,10 +54,132 @@ export default function RoutesPage() {
     return baseFilters;
   }, [searchQuery, activeTab]);
 
-  const { routes, loading, error } = useRoutes({
+  const { routes, loading, error, update: updateRoute, refetch: refetchRoutes } = useRoutes({
     autoFetch: true,
     filters: filters as any,
   });
+
+  // Fetch all people for the assign dropdown
+  const { people: allPeople, loading: peopleLoading } = usePeople({
+    autoFetch: true,
+  });
+
+  // Filter people based on search query
+  const filteredDeliverers = useMemo(() => {
+    if (!delivererSearchQuery.trim()) {
+      return allPeople.slice(0, 10); // Show first 10 when no search
+    }
+    const query = delivererSearchQuery.toLowerCase();
+    return allPeople.filter(
+      (person) =>
+        person.full_name.toLowerCase().includes(query) ||
+        person.email?.toLowerCase().includes(query)
+    );
+  }, [allPeople, delivererSearchQuery]);
+
+  // Get selected deliverer name for display
+  const selectedDeliverer = useMemo(() => {
+    if (!selectedDelivererId) return null;
+    return allPeople.find((p) => p.id === selectedDelivererId);
+  }, [allPeople, selectedDelivererId]);
+
+  // Reset search when modal opens/closes
+  useEffect(() => {
+    if (assignModalOpen) {
+      setDelivererSearchQuery("");
+      setShowDelivererDropdown(false);
+      setHighlightedIndex(-1);
+      setTimeout(() => {
+        delivererInputRef.current?.focus();
+      }, 100);
+    } else {
+      setDelivererSearchQuery("");
+      setSelectedDelivererId("");
+      setShowDelivererDropdown(false);
+      setHighlightedIndex(-1);
+    }
+  }, [assignModalOpen]);
+
+  // Scroll highlighted item into view
+  useEffect(() => {
+    if (highlightedIndex >= 0 && delivererDropdownRef.current) {
+      const items = delivererDropdownRef.current.querySelectorAll('[data-deliverer-item]');
+      const highlightedItem = items[highlightedIndex] as HTMLElement;
+      if (highlightedItem) {
+        highlightedItem.scrollIntoView({
+          block: 'nearest',
+          behavior: 'smooth',
+        });
+      }
+    }
+  }, [highlightedIndex]);
+
+  // Handle keyboard navigation in typeahead
+  const handleDelivererKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showDelivererDropdown && filteredDeliverers.length > 0) {
+      if (e.key === "ArrowDown" || e.key === "Enter") {
+        setShowDelivererDropdown(true);
+        setHighlightedIndex(0);
+        e.preventDefault();
+        return;
+      }
+    }
+
+    if (!showDelivererDropdown) return;
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setHighlightedIndex((prev) =>
+          prev < filteredDeliverers.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+        break;
+      case "Enter":
+        e.preventDefault();
+        if (highlightedIndex >= 0 && highlightedIndex < filteredDeliverers.length) {
+          handleSelectDeliverer(filteredDeliverers[highlightedIndex].id);
+        }
+        break;
+      case "Escape":
+        e.preventDefault();
+        setShowDelivererDropdown(false);
+        setHighlightedIndex(-1);
+        break;
+    }
+  };
+
+  // Handle selecting a deliverer
+  const handleSelectDeliverer = (personId: string) => {
+    setSelectedDelivererId(personId);
+    const person = allPeople.find((p) => p.id === personId);
+    setDelivererSearchQuery(person ? `${person.full_name}${person.email ? ` (${person.email})` : ""}` : "");
+    setShowDelivererDropdown(false);
+    setHighlightedIndex(-1);
+  };
+
+  // Handle clicking outside dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        delivererDropdownRef.current &&
+        !delivererDropdownRef.current.contains(event.target as Node) &&
+        delivererInputRef.current &&
+        !delivererInputRef.current.contains(event.target as Node)
+      ) {
+        setShowDelivererDropdown(false);
+        setHighlightedIndex(-1);
+      }
+    };
+
+    if (showDelivererDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showDelivererDropdown]);
 
   // Group routes by deliverer for "By Deliverer" tab
   const routesByDeliverer = useMemo(() => {
@@ -85,6 +218,48 @@ export default function RoutesPage() {
       return route.primary_deliverer.full_name;
     }
     return route.primary_deliverer_email || "Unassigned";
+  };
+
+  // Handle opening assign modal
+  const handleAssignClick = (route: RouteWithDeliverer, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setRouteToAssign(route);
+    setSelectedDelivererId("");
+    setDelivererSearchQuery("");
+    setAssignModalOpen(true);
+  };
+
+  // Handle assigning route to deliverer
+  const handleAssignSubmit = async () => {
+    if (!routeToAssign || !selectedDelivererId) {
+      showToast.error("Please select a deliverer");
+      return;
+    }
+
+    setIsAssigning(true);
+    try {
+      const selectedDeliverer = allPeople.find((p) => p.id === selectedDelivererId);
+      const result = await updateRoute(routeToAssign.id, {
+        primary_deliverer_id: selectedDelivererId,
+        primary_deliverer_email: selectedDeliverer?.email || null,
+      });
+
+      if (result) {
+        showToast.success(`Route assigned to ${selectedDeliverer?.full_name || "deliverer"}`);
+        setAssignModalOpen(false);
+        setRouteToAssign(null);
+        setSelectedDelivererId("");
+        // Refetch routes to update the UI
+        await refetchRoutes();
+      } else {
+        showToast.error("Failed to assign route");
+      }
+    } catch (err) {
+      showToast.error("Failed to assign route");
+      console.error("Error assigning route:", err);
+    } finally {
+      setIsAssigning(false);
+    }
   };
 
 
@@ -317,11 +492,7 @@ export default function RoutesPage() {
                           <Button
                             variant="secondary"
                             size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Placeholder for assign functionality
-                              alert("Assign functionality coming soon");
-                            }}
+                            onClick={(e) => handleAssignClick(route, e)}
                           >
                             Assign
                           </Button>
@@ -446,9 +617,156 @@ export default function RoutesPage() {
               </div>
             </div>
           </div>
-        </div>
-      )}
+          </div>
+        )}
       </div>
+
+      {/* Assign Route Modal */}
+      <Modal
+        isOpen={assignModalOpen}
+        onClose={() => {
+          setAssignModalOpen(false);
+          setRouteToAssign(null);
+          setSelectedDelivererId("");
+          setDelivererSearchQuery("");
+          setShowDelivererDropdown(false);
+        }}
+        title="Assign Route"
+        size="md"
+      >
+        <div className="space-y-6">
+          {routeToAssign && (
+            <div className="space-y-2">
+              <div>
+                <label className="text-sm font-medium text-gray-700">Route</label>
+                <p className="text-gray-900 font-medium">{routeToAssign.route_name}</p>
+              </div>
+              {routeToAssign.leaflet_count !== null && (
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Leaflets</label>
+                  <p className="text-gray-600">{routeToAssign.leaflet_count}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="relative">
+            <label htmlFor="deliverer-search" className="block text-sm font-medium text-gray-700 mb-2">
+              Select Deliverer
+            </label>
+            <div className="relative">
+              <Input
+                ref={delivererInputRef}
+                id="deliverer-search"
+                type="text"
+                value={delivererSearchQuery}
+                onChange={(e) => {
+                  setDelivererSearchQuery(e.target.value);
+                  setShowDelivererDropdown(true);
+                  setHighlightedIndex(-1);
+                  if (!e.target.value) {
+                    setSelectedDelivererId("");
+                  }
+                }}
+                onFocus={() => {
+                  if (filteredDeliverers.length > 0) {
+                    setShowDelivererDropdown(true);
+                  }
+                }}
+                onKeyDown={handleDelivererKeyDown}
+                placeholder="Search by name or email..."
+                disabled={peopleLoading || isAssigning}
+                className="w-full"
+              />
+              {peopleLoading && (
+                <p className="mt-1 text-sm text-gray-500">Loading deliverers...</p>
+              )}
+              
+              {/* Typeahead Dropdown */}
+              {showDelivererDropdown && filteredDeliverers.length > 0 && (
+                <div
+                  ref={delivererDropdownRef}
+                  className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto"
+                >
+                  {filteredDeliverers.map((person, index) => (
+                    <div
+                      key={person.id}
+                      data-deliverer-item
+                      onClick={() => handleSelectDeliverer(person.id)}
+                      className={`px-4 py-2 cursor-pointer transition-colors ${
+                        index === highlightedIndex
+                          ? "bg-blue-50 text-blue-900"
+                          : "hover:bg-gray-50 text-gray-900"
+                      }`}
+                      onMouseEnter={() => setHighlightedIndex(index)}
+                    >
+                      <div className="font-medium">{person.full_name}</div>
+                      {person.email && (
+                        <div className="text-sm text-gray-500">{person.email}</div>
+                      )}
+                    </div>
+                  ))}
+                  {filteredDeliverers.length === 0 && delivererSearchQuery && (
+                    <div className="px-4 py-2 text-gray-500 text-sm">
+                      No deliverers found
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            {selectedDeliverer && (
+              <div className="mt-2 p-2 bg-gray-50 rounded border border-gray-200">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-gray-900">
+                      Selected: {selectedDeliverer.full_name}
+                    </div>
+                    {selectedDeliverer.email && (
+                      <div className="text-xs text-gray-500">{selectedDeliverer.email}</div>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedDelivererId("");
+                      setDelivererSearchQuery("");
+                      setShowDelivererDropdown(false);
+                      setHighlightedIndex(-1);
+                      delivererInputRef.current?.focus();
+                    }}
+                    className="text-sm text-blue-600 hover:text-blue-800 underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded px-1"
+                    type="button"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setAssignModalOpen(false);
+                setRouteToAssign(null);
+                setSelectedDelivererId("");
+                setDelivererSearchQuery("");
+                setShowDelivererDropdown(false);
+              }}
+              disabled={isAssigning}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleAssignSubmit}
+              disabled={!selectedDelivererId || isAssigning || peopleLoading}
+            >
+              {isAssigning ? "Assigning..." : "Assign Route"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 }

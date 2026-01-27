@@ -36,10 +36,7 @@ export function Modal({
       document.addEventListener("keydown", handleEscape);
       // Store the previously active element
       previousActiveElement.current = document.activeElement as HTMLElement;
-      // Focus the modal
-      setTimeout(() => {
-        modalRef.current?.focus();
-      }, 0);
+      // Don't auto-focus the modal container - let the focus trap handle it
     }
 
     return () => {
@@ -77,7 +74,19 @@ export function Modal({
     };
 
     modal.addEventListener("keydown", handleTab);
-    firstElement?.focus();
+    
+    // Only focus first element if no input/textarea is already focused within the modal
+    const activeElement = document.activeElement;
+    const isInputFocused = activeElement && (
+      activeElement.tagName === 'INPUT' ||
+      activeElement.tagName === 'TEXTAREA' ||
+      activeElement.tagName === 'SELECT'
+    );
+    const isWithinModal = modal.contains(activeElement);
+    
+    if (!isInputFocused || !isWithinModal) {
+      firstElement?.focus();
+    }
 
     return () => {
       modal.removeEventListener("keydown", handleTab);
