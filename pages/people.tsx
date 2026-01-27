@@ -151,12 +151,33 @@ export default function PeoplePage() {
       // Use deterministic date formatting to avoid hydration mismatches
       const date = new Date(dateString);
       const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      return `${month}/${day}/${year}`;
+      const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ];
+      const month = monthNames[date.getMonth()];
+      const day = date.getDate();
+      return `${month} ${day}, ${year}`;
     } catch {
       return "—";
     }
+  };
+
+  const formatPaymentMethod = (paymentMethod: string | null) => {
+    if (!paymentMethod) return null;
+    const method = paymentMethod.toLowerCase().trim();
+    
+    if (method.includes("card") || method.includes("credit") || method.includes("debit")) {
+      return "by Credit Card";
+    }
+    if (method.includes("check")) {
+      return "By Check";
+    }
+    if (method.includes("cash")) {
+      return "Cash";
+    }
+    // Return original if no match, but capitalize first letter
+    return paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1).toLowerCase();
   };
 
   const getInitials = (name: string) => {
@@ -277,10 +298,10 @@ export default function PeoplePage() {
                         return (
                           <TableRow
                             key={person.id}
-                            className="cursor-pointer bg-white border-b border-gray-100 hover:bg-gray-50/50 transition-colors"
+                            className="group cursor-pointer bg-white border-b border-gray-100 hover:bg-gray-100 transition-colors"
                             onClick={() => setSelectedPerson(person)}
                           >
-                            <TableCell className="px-6 py-4 bg-white">
+                            <TableCell className="px-6 py-4">
                               <div className="grid grid-cols-[max-content_1fr] items-center gap-3">
                                 <div 
                                   className={`relative flex size-10 items-center justify-center rounded-full font-semibold text-sm ${person.full_name ? getAvatarColor(person.full_name) : "bg-gray-100 text-gray-600"}`}
@@ -308,11 +329,27 @@ export default function PeoplePage() {
                                 </div>
                               </div>
                             </TableCell>
-                            <TableCell className="px-6 py-4 bg-white text-gray-600">{person.address || "—"}</TableCell>
+                            <TableCell className="px-6 py-4 text-gray-600">{person.address || "—"}</TableCell>
                             {activeTab === "members" && (
                               <>
-                                <TableCell className="px-6 py-4 bg-white text-gray-600">{person.membership?.tier || "—"}</TableCell>
-                                <TableCell className="px-6 py-4 bg-white text-gray-600">{formatDate(person.membership?.last_renewal || null)}</TableCell>
+                                <TableCell className="px-6 py-4 text-gray-600">
+                                  <div>
+                                    {person.membership?.tier || "—"}
+                                  </div>
+                                  {(person.membership?.start_date || person.membership?.created_at) && (
+                                    <div className="text-sm text-gray-500 mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out">
+                                      Since {formatDate(person.membership.start_date || person.membership.created_at || null)}
+                                    </div>
+                                  )}
+                                </TableCell>
+                                <TableCell className="px-6 py-4 text-gray-600">
+                                  <div>{formatDate(person.membership?.last_renewal || null)}</div>
+                                  {formatPaymentMethod(person.membership?.payment_method || null) && (
+                                    <div className="text-sm text-gray-500 mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out">
+                                      {formatPaymentMethod(person.membership?.payment_method || null)}
+                                    </div>
+                                  )}
+                                </TableCell>
                               </>
                             )}
                           </TableRow>
@@ -331,10 +368,10 @@ export default function PeoplePage() {
                         return (
                           <TableRow
                             key={person.id}
-                            className="cursor-pointer bg-white border-b border-gray-100 hover:bg-gray-50/50 transition-colors"
+                            className="group cursor-pointer bg-white border-b border-gray-100 hover:bg-gray-100 transition-colors"
                             onClick={() => setSelectedPerson(person)}
                           >
-                            <TableCell className="px-6 py-4 bg-white">
+                            <TableCell className="px-6 py-4">
                               <div>
                                 <div className="font-medium text-gray-900">{person.email || "—"}</div>
                                 <div className="text-sm text-gray-500 mt-0.5">
@@ -342,8 +379,8 @@ export default function PeoplePage() {
                                 </div>
                               </div>
                             </TableCell>
-                            <TableCell className="px-6 py-4 bg-white text-gray-600">{duplicateGroup.length}</TableCell>
-                            <TableCell className="px-6 py-4 bg-white text-gray-600">
+                            <TableCell className="px-6 py-4 text-gray-600">{duplicateGroup.length}</TableCell>
+                            <TableCell className="px-6 py-4 text-gray-600">
                               {uniqueTiers.length > 0 ? uniqueTiers.join(", ") : "—"}
                             </TableCell>
                           </TableRow>
