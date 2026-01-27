@@ -237,14 +237,14 @@ export default function BusinessesPage() {
             <div className="overflow-x-auto">
               <Table className="border-l-0 border-r-0">
                 <TableHeader>
-                  <TableRow className="border-b border-gray-200 bg-white hover:bg-white">
-                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Company Name</TableHead>
-                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Contact Name</TableHead>
-                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Email</TableHead>
-                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Phone</TableHead>
-                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Address</TableHead>
-                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Sponsorship Tags</TableHead>
-                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Status</TableHead>
+                  <TableRow className="border-b border-gray-200">
+                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700">Company Name</TableHead>
+                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700">Contact Name</TableHead>
+                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700">Email</TableHead>
+                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700">Phone</TableHead>
+                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700">Address</TableHead>
+                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700">Sponsorship Tags</TableHead>
+                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -263,7 +263,7 @@ export default function BusinessesPage() {
                       return (
                         <TableRow
                           key={business.id}
-                          className="group cursor-pointer bg-white border-b border-gray-100 hover:bg-gray-100 transition-colors"
+                          className="group cursor-pointer border-b border-gray-100 hover:bg-gray-100 transition-colors"
                           onClick={() => setSelectedBusiness(business)}
                         >
                           <TableCell className="px-6 py-4 font-medium text-gray-900">

@@ -43,6 +43,7 @@ export default function RoutesPage() {
   const [markAsTempModalOpen, setMarkAsTempModalOpen] = useState(false);
   const [routeToMarkAsTemp, setRouteToMarkAsTemp] = useState<RouteWithDeliverer | null>(null);
   const [isMarkingAsTemp, setIsMarkingAsTemp] = useState(false);
+  const [copiedDeliverers, setCopiedDeliverers] = useState<Set<string>>(new Set());
 
   // Always fetch all routes needed for tab counts, regardless of active tab
   // Fetch assigned routes (for by-route and by-deliverer tabs)
@@ -443,6 +444,7 @@ export default function RoutesPage() {
   };
 
 
+
   return (
     <>
       <Head>
@@ -505,17 +507,17 @@ export default function RoutesPage() {
             <div className="overflow-x-auto">
               <Table className="border-l-0 border-r-0">
                 <TableHeader>
-                  <TableRow className="border-b border-gray-200 bg-white hover:bg-white">
-                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Route Name</TableHead>
-                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Leaflets</TableHead>
-                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Deliverer</TableHead>
-                    <TableHead className="p-0 bg-white text-left"></TableHead>
+                  <TableRow className="border-b border-gray-200">
+                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700">Route Name</TableHead>
+                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700">Leaflets</TableHead>
+                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700">Deliverer</TableHead>
+                    <TableHead className="p-0 text-left"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {routes.length === 0 ? (
                     <TableRow className="border-b border-gray-100">
-                      <TableCell colSpan={4} className="text-center py-12 text-gray-500 bg-white">
+                      <TableCell colSpan={4} className="text-center py-12 text-gray-500">
                         No routes found
                       </TableCell>
                     </TableRow>
@@ -523,13 +525,13 @@ export default function RoutesPage() {
                     routes.map((route) => (
                       <TableRow
                         key={route.id}
-                        className="cursor-pointer bg-white border-b border-gray-100 hover:bg-gray-50/50 transition-colors"
+                        className="cursor-pointer border-b border-gray-100 hover:bg-gray-100 transition-colors"
                         onClick={() => setSelectedRoute(route)}
                       >
-                        <TableCell className="px-6 py-4 bg-white font-medium text-gray-900">{route.route_name}</TableCell>
-                        <TableCell className="px-6 py-4 bg-white text-gray-600">{route.leaflet_count || 0}</TableCell>
-                        <TableCell className="px-6 py-4 bg-white text-gray-600">{getDelivererName(route)}</TableCell>
-                        <TableCell className="p-2 bg-white text-left">
+                        <TableCell className="px-6 py-4 font-medium text-gray-900">{route.route_name}</TableCell>
+                        <TableCell className="px-6 py-4 text-gray-600">{route.leaflet_count || 0}</TableCell>
+                        <TableCell className="px-6 py-4 text-gray-600">{getDelivererName(route)}</TableCell>
+                        <TableCell className="p-2 text-left">
                           <div className="flex flex-row gap-2">
                             <button
                               onClick={(e) => handleUnassignClick(route, e)}
@@ -600,13 +602,43 @@ export default function RoutesPage() {
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="flex items-center gap-3">
-                            <h3 className="text-lg font-semibold text-[#464D3F]">{delivererName}</h3>
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-lg font-semibold text-[#464D3F]">{delivererName}</h3>
+                              {deliverer?.email && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigator.clipboard.writeText(deliverer.email || "");
+                                    showToast.success("Copied to clipboard");
+                                  }}
+                                  className="text-sm font-normal text-gray-600 hover:text-gray-900 cursor-pointer"
+                                  aria-label="Copy email to clipboard"
+                                >
+                                  {deliverer.email}
+                                </button>
+                              )}
+                            </div>
                             <span className="px-2 py-1 rounded bg-white/70 text-sm font-medium text-[#464D3F] border border-gray-200">
                               {delivererRoutes.length} {delivererRoutes.length === 1 ? 'route' : 'routes'}
                             </span>
                           </div>
                           <p className="mt-1 text-sm text-gray-600">{totalLeaflets} {totalLeaflets === 1 ? 'leaflet' : 'leaflets'}</p>
                         </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const routesText = delivererRoutes
+                              .map((route) => `${route.route_name} | ${route.leaflet_count || 0} leaflets`)
+                              .join('\n');
+                            navigator.clipboard.writeText(routesText);
+                            showToast.success("Routes copied!");
+                            setCopiedDeliverers((prev) => new Set(prev).add(delivererId));
+                          }}
+                          className="text-sm font-normal text-gray-600 hover:text-gray-900 cursor-pointer underline"
+                          aria-label="Copy routes to clipboard"
+                        >
+                          {copiedDeliverers.has(delivererId) ? "Routes copied!" : "Copy routes"}
+                        </button>
                       </div>
                     </div>
 
@@ -614,16 +646,17 @@ export default function RoutesPage() {
                     <div className="overflow-x-auto bg-white">
                       <Table className="border-l-0 border-r-0">
                         <TableHeader>
-                          <TableRow className="border-b border-gray-200 bg-white hover:bg-white">
-                            <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Route Name</TableHead>
-                            <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Leaflets</TableHead>
+                          <TableRow className="border-b border-gray-200">
+                            <TableHead className="px-6 py-4 text-sm font-medium text-gray-700">Route Name</TableHead>
+                            <TableHead className="px-6 py-4 text-sm font-medium text-gray-700">Leaflets</TableHead>
+                            <TableHead className="p-0 text-left"></TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {delivererRoutes.map((route) => (
                             <TableRow
                               key={route.id}
-                              className="cursor-pointer bg-white border-b border-gray-100 hover:bg-gray-100 transition-colors"
+                              className="cursor-pointer border-b border-gray-100 hover:bg-gray-100 transition-colors"
                               onClick={() => setSelectedRoute(route)}
                             >
                               <TableCell className="px-6 py-4">
@@ -633,6 +666,26 @@ export default function RoutesPage() {
                                 </div>
                               </TableCell>
                               <TableCell className="px-6 py-4 text-gray-600">{route.leaflet_count || 0}</TableCell>
+                              <TableCell className="p-2 text-left">
+                                <div className="flex flex-row gap-2">
+                                  <button
+                                    onClick={(e) => handleUnassignClick(route, e)}
+                                    className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                                    title="Unassign"
+                                    aria-label="Unassign route"
+                                  >
+                                    <UnassignRouteIcon className="size-5" />
+                                  </button>
+                                  <button
+                                    onClick={(e) => handleMarkAsTempClick(route, e)}
+                                    className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                                    title="Mark as temp"
+                                    aria-label="Mark route as temporary"
+                                  >
+                                    <SkipIcon className="size-5" />
+                                  </button>
+                                </div>
+                              </TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -665,16 +718,16 @@ export default function RoutesPage() {
             <div className="overflow-x-auto">
               <Table className="border-l-0 border-r-0">
                 <TableHeader>
-                  <TableRow className="border-b border-gray-200 bg-white hover:bg-white">
-                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Route Name</TableHead>
-                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Leaflets</TableHead>
-                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Action</TableHead>
+                  <TableRow className="border-b border-gray-200">
+                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700">Route Name</TableHead>
+                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700">Leaflets</TableHead>
+                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {routes.length === 0 ? (
                     <TableRow className="border-b border-gray-100">
-                      <TableCell colSpan={3} className="text-center py-12 text-gray-500 bg-white">
+                      <TableCell colSpan={3} className="text-center py-12 text-gray-500">
                         No open routes found
                       </TableCell>
                     </TableRow>
@@ -682,7 +735,7 @@ export default function RoutesPage() {
                     routes.map((route) => (
                       <TableRow
                         key={route.id}
-                        className="cursor-pointer bg-white border-b border-gray-100 hover:bg-gray-100 transition-colors"
+                        className="cursor-pointer border-b border-gray-100 hover:bg-gray-100 transition-colors"
                         onClick={() => setSelectedRoute(route)}
                       >
                         <TableCell className="px-6 py-4">
@@ -1060,6 +1113,7 @@ export default function RoutesPage() {
           </div>
         </div>
       </Modal>
+
     </>
   );
 }

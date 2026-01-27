@@ -271,11 +271,11 @@ export default function PeoplePage() {
             <div className="overflow-x-auto">
               <Table className="border-l-0 border-r-0">
                 <TableHeader>
-                  <TableRow className="border-b border-gray-200 bg-white hover:bg-white">
+                  <TableRow className="border-b border-gray-200">
                     {getTableColumns().map((header) => (
                       <TableHead 
                         key={header}
-                        className="px-6 py-4 text-sm font-medium text-gray-700 bg-white first:pl-6"
+                        className="px-6 py-4 text-sm font-medium text-gray-700 first:pl-6"
                       >
                         {header}
                       </TableHead>
@@ -287,7 +287,7 @@ export default function PeoplePage() {
                     <TableRow className="border-b border-gray-100">
                       <TableCell 
                         colSpan={getTableColumns().length} 
-                        className="text-center py-12 text-gray-500 bg-white"
+                        className="text-center py-12 text-gray-500"
                       >
                         No neighbors found
                       </TableCell>
@@ -299,7 +299,7 @@ export default function PeoplePage() {
                         return (
                           <TableRow
                             key={person.id}
-                            className="group cursor-pointer bg-white border-b border-gray-100 hover:bg-gray-100 transition-colors"
+                            className="group cursor-pointer border-b border-gray-100 hover:bg-gray-100 transition-colors"
                             onClick={() => setSelectedPerson(person)}
                           >
                             <TableCell className="px-6 py-4">
@@ -361,7 +361,7 @@ export default function PeoplePage() {
                         return (
                           <TableRow
                             key={person.id}
-                            className="group cursor-pointer bg-white border-b border-gray-100 hover:bg-gray-100 transition-colors"
+                            className="group cursor-pointer border-b border-gray-100 hover:bg-gray-100 transition-colors"
                             onClick={() => setSelectedPerson(person)}
                           >
                             <TableCell className="px-6 py-4">
