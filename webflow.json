@@ -1,5 +1,16 @@
 {
   "cosmic": {
     "framework": "nextjs"
+  },
+  "telemetry": {
+    "global": {
+      "allowTelemetry": true,
+      "lastPrompted": 1769520011792,
+      "version": "1.11.0"
+    }
+  },
+  "cloud": {
+    "framework": "nextjs",
+    "project_id": "a04aad28-4826-4dbc-ae18-5d99de9868bb"
   }
 }
