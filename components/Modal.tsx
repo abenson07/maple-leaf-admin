@@ -114,21 +114,24 @@ export function Modal({
     >
       <div
         ref={modalRef}
-        className={`relative w-full ${sizeClasses[size]} rounded-lg bg-background-primary shadow-lg`}
+        className={`relative w-full ${sizeClasses[size]} rounded-lg bg-white shadow-lg`}
+        style={{
+          boxShadow: '0px 3px 5px -1px rgba(0, 0, 0, 0.2), 0px 5px 8px 0px rgba(0, 0, 0, 0.14), 0px 1px 14px 0px rgba(0, 0, 0, 0.12)'
+        }}
         onClick={(e) => e.stopPropagation()}
         tabIndex={-1}
       >
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between border-b border-border-primary p-6">
+          <div className="flex items-center justify-between border-b border-gray-200 p-6">
             {title && (
-              <h2 id="modal-title" className="text-xl font-semibold">
+              <h2 id="modal-title" className="text-xl font-semibold text-[#464D3F]">
                 {title}
               </h2>
             )}
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="ml-auto rounded p-1 hover:bg-background-secondary transition-colors"
+                className="ml-auto rounded-lg p-1 hover:bg-gray-100 transition-colors text-gray-600 hover:text-[#464D3F]"
                 aria-label="Close modal"
               >
                 <BiX className="size-6" />

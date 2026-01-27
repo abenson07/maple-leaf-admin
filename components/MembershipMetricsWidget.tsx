@@ -62,7 +62,9 @@ export function MembershipMetricsWidget() {
     labels: metrics.monthlyBreakdown.map((m) => {
       const [year, month] = m.month.split("-");
       const date = new Date(parseInt(year), parseInt(month) - 1);
-      return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+      // Use deterministic formatting to avoid hydration mismatches
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      return `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
     }),
     datasets: [
       {
@@ -169,10 +171,9 @@ export function MembershipMetricsWidget() {
               {metrics.monthlyBreakdown.map((month, index) => {
                 const [year, monthNum] = month.month.split("-");
                 const date = new Date(parseInt(year), parseInt(monthNum) - 1);
-                const monthLabel = date.toLocaleDateString("en-US", {
-                  month: "long",
-                  year: "numeric",
-                });
+                // Use deterministic formatting to avoid hydration mismatches
+                const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                const monthLabel = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
 
                 return (
                   <TableRow key={index}>

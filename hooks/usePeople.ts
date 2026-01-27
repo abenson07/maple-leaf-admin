@@ -38,6 +38,11 @@ export function usePeople(options: UsePeopleOptions = {}): UsePeopleReturn {
       setLoading(true);
       setError(null);
 
+      // Verify Supabase client is initialized
+      if (!supabaseClient) {
+        throw new Error("Supabase client is not initialized. Please check your environment variables.");
+      }
+
       // Build query for people
       let query = supabaseClient.from("people").select("*");
 
@@ -57,6 +62,7 @@ export function usePeople(options: UsePeopleOptions = {}): UsePeopleReturn {
       // Filter by membership status
       if (filters.hasMembership !== undefined) {
         if (filters.hasMembership) {
+          // Filter for people with membership_id (NOT NULL)
           query = query.not("membership_id", "is", null);
         } else {
           query = query.is("membership_id", null);
@@ -68,7 +74,8 @@ export function usePeople(options: UsePeopleOptions = {}): UsePeopleReturn {
       });
 
       if (queryError) {
-        throw queryError;
+        console.error("Supabase query error:", queryError);
+        throw new Error(`Failed to fetch people: ${queryError.message || JSON.stringify(queryError)}`);
       }
 
       // Fetch memberships separately and join
@@ -111,9 +118,29 @@ export function usePeople(options: UsePeopleOptions = {}): UsePeopleReturn {
 
       setPeople(transformedData);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to fetch people";
+      let errorMessage = "Failed to fetch people";
+      
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === 'object' && err !== null) {
+        // Handle Supabase error objects
+        const supabaseError = err as any;
+        if (supabaseError.message) {
+          errorMessage = supabaseError.message;
+        } else if (supabaseError.error) {
+          errorMessage = supabaseError.error;
+        } else {
+          errorMessage = JSON.stringify(err);
+        }
+      }
+      
       setError(errorMessage);
-      console.error("Error fetching people:", err);
+      console.error("Error fetching people:", {
+        error: err,
+        message: errorMessage,
+        filters,
+        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ? "configured" : "missing"
+      });
     } finally {
       setLoading(false);
     }

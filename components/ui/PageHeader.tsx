@@ -17,88 +17,76 @@ type BreadcrumbProps = {
 };
 
 type Props = {
-  breadcrumbs: BreadcrumbProps[];
+  breadcrumbs?: BreadcrumbProps[];
   heading: string;
-  description: string;
+  description?: string;
+  subtitle?: string;
   inputPlaceholder?: string;
   inputIcon?: React.ReactNode;
   inputValue?: string;
   onInputChange?: (value: string) => void;
   buttons: ButtonProps[];
+  headerActions?: React.ReactNode;
 };
 
 export type PageHeader1Props = React.ComponentPropsWithoutRef<"section"> & Partial<Props>;
 
 export const PageHeader1 = (props: PageHeader1Props) => {
-  const { breadcrumbs, heading, description, inputPlaceholder, inputIcon, inputValue, onInputChange, buttons } = {
+  const { breadcrumbs, heading, description, subtitle, inputPlaceholder, inputIcon, inputValue, onInputChange, buttons, headerActions } = {
     ...PageHeader1Defaults,
     ...props,
   };
   return (
     <section id="relume" className="px-6 py-8 md:px-8 md:py-10 lg:py-12">
-      <div className="container">
-        <div className="max-w-lg lg:max-w-xxl">
-          <Breadcrumb className="mb-3 flex w-full items-center md:mb-4">
-            <BreadcrumbList className="gap-2">
-              {breadcrumbs.map((item, index) => (
-                <React.Fragment key={index}>
-                  <BreadcrumbItem>
-                    <BreadcrumbLink
-                      className={`text-sm ${index === breadcrumbs.length - 1 && "font-medium"}`}
-                      href={item.url}
-                    >
-                      {item.title}
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                  {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
-                </React.Fragment>
-              ))}
-            </BreadcrumbList>
-          </Breadcrumb>
-          <div className="grid w-full grid-cols-1 gap-4 md:gap-6 lg:grid-cols-[1fr_max-content]">
+      <div className="flex items-start justify-between gap-4 w-full">
+        <div className="max-w-lg lg:max-w-xxl flex-shrink-0">
+          {breadcrumbs && breadcrumbs.length > 0 && (
+            <Breadcrumb className="mb-3 flex w-full items-center md:mb-4">
+              <BreadcrumbList className="gap-2">
+                {breadcrumbs.map((item, index) => (
+                  <React.Fragment key={index}>
+                    <BreadcrumbItem>
+                      <BreadcrumbLink
+                        className={`text-sm ${index === breadcrumbs.length - 1 && "font-medium"}`}
+                        href={item.url}
+                      >
+                        {item.title}
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
+                  </React.Fragment>
+                ))}
+              </BreadcrumbList>
+            </Breadcrumb>
+          )}
+          <div>
             <div className="max-w-lg flex-1">
-              <h1 className="text-2xl font-bold md:text-3xl md:leading-[1.3] lg:text-4xl">
+              <h1 className="text-4xl font-bold md:text-5xl text-black">
                 {heading}
               </h1>
-              <p className="mt-2">{description}</p>
-            </div>
-            <div className="flex w-full items-end">
-              <div className="flex w-full flex-col md:w-auto md:flex-row md:items-center">
-                {inputPlaceholder && (
-                  <div className="mb-4 w-full md:mb-0 md:mr-4">
-                    <Input
-                      placeholder={inputPlaceholder}
-                      icon={inputIcon}
-                      value={inputValue}
-                      onChange={(e) => onInputChange?.(e.target.value)}
-                    />
-                  </div>
-                )}
-                <div className="flex flex-wrap gap-4 md:flex-none">
-                  {buttons.map((button, index) => (
-                    <Button key={index} {...button}>
-                      {button.title}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+              {subtitle && (
+                <p className="mt-1 text-sm text-gray-500">{subtitle}</p>
+              )}
+              {description && !subtitle && (
+                <p className="mt-2 text-gray-600">{description}</p>
+              )}
             </div>
           </div>
         </div>
+        {headerActions && (
+          <div className="flex-shrink-0 ml-auto">
+            {headerActions}
+          </div>
+        )}
       </div>
     </section>
   );
 };
 
 export const PageHeader1Defaults: Props = {
-  breadcrumbs: [
-    { url: "#", title: "Link One" },
-    { url: "#", title: "Link Two" },
-    { url: "#", title: "Link Three" },
-  ],
+  breadcrumbs: [],
   heading: "Heading goes here",
-  description:
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros.",
+  description: "",
   inputPlaceholder: "Search",
   inputIcon: <BiSearch className="size-6" />,
   buttons: [

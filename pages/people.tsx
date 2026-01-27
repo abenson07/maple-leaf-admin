@@ -6,7 +6,7 @@ import { PageHeader1 } from "@/components/ui";
 import { FilterTabs, useFilterTabs } from "@/components/ui";
 import { usePeople, PersonWithMembership } from "@/hooks";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Button, Input } from "@relume_io/relume-ui";
-import { BiSearch, BiPlus, BiUser, BiX } from "react-icons/bi";
+import { BiSearch, BiPlus, BiUser, BiX, BiCopy } from "react-icons/bi";
 import { CopyableText } from "@/components/CopyableText";
 import { Modal } from "@/components/Modal";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
@@ -28,34 +28,54 @@ export default function PeoplePage() {
     address: "",
   });
 
-  // Determine filters based on active tab
+  // Always fetch all people (no filtering by tab) to avoid refetches and flashing
   const filters = useMemo(() => {
-    const baseFilters: { search?: string; hasMembership?: boolean } = {};
+    const baseFilters: { search?: string } = {};
     
     if (searchQuery) {
       baseFilters.search = searchQuery;
     }
 
-    if (activeTab === "members") {
-      baseFilters.hasMembership = true;
-    } else if (activeTab === "duplicates") {
-      // For duplicates, we'll filter client-side
-      baseFilters.hasMembership = undefined;
-    }
-
     return baseFilters;
-  }, [searchQuery, activeTab]);
+  }, [searchQuery]);
 
   const { people, loading, error, refetch, create } = usePeople({
     autoFetch: true,
-    filters: filters as any, // Type assertion to handle filter types
+    filters: filters as any,
   });
 
-  // Filter duplicates client-side (people with same email)
+  // Calculate duplicates count independently (always, not just when duplicates tab is active)
+  const duplicatesCount = useMemo(() => {
+    const emailMap = new Map<string, PersonWithMembership[]>();
+    people.forEach((person) => {
+      if (person.email) {
+        const email = person.email.toLowerCase();
+        if (!emailMap.has(email)) {
+          emailMap.set(email, []);
+        }
+        emailMap.get(email)!.push(person);
+      }
+    });
+    // Count duplicate groups (emails with more than one person)
+    let count = 0;
+    emailMap.forEach((peopleList) => {
+      if (peopleList.length > 1) {
+        count++;
+      }
+    });
+    return count;
+  }, [people]);
+
+  // Filter people client-side based on active tab (no refetch needed)
   const filteredPeople = useMemo(() => {
-    if (activeTab === "duplicates") {
+    let filtered = people;
+
+    // Apply tab-based filtering
+    if (activeTab === "members") {
+      filtered = filtered.filter((p) => p.membership_id);
+    } else if (activeTab === "duplicates") {
       const emailMap = new Map<string, PersonWithMembership[]>();
-      people.forEach((person) => {
+      filtered.forEach((person) => {
         if (person.email) {
           const email = person.email.toLowerCase();
           if (!emailMap.has(email)) {
@@ -75,22 +95,22 @@ export default function PeoplePage() {
           } as PersonWithMembership & { _duplicateGroup?: PersonWithMembership[] });
         }
       });
-      return duplicates;
+      filtered = duplicates;
     }
-    return people;
+
+    return filtered;
   }, [people, activeTab]);
 
   // Calculate tab counts
   const tabCounts = useMemo(() => {
     const allCount = people.length;
     const membersCount = people.filter((p) => p.membership_id).length;
-    const duplicatesCount = filteredPeople.length;
     return {
       all: allCount,
       members: membersCount,
       duplicates: duplicatesCount,
     };
-  }, [people, filteredPeople]);
+  }, [people, duplicatesCount]);
 
   const handleAddPerson = async () => {
     if (!newPersonForm.full_name.trim()) {
@@ -114,20 +134,26 @@ export default function PeoplePage() {
   const getTableColumns = () => {
     switch (activeTab) {
       case "all":
-        return ["Name", "Email", "Address"];
+        return ["Name", "Address"];
       case "members":
-        return ["Name", "Email", "Address", "Tier", "Last Renewal"];
+        return ["Name", "Address", "Tier", "Last Renewal"];
       case "duplicates":
         return ["Email/Person", "Memberships", "Tiers"];
       default:
-        return ["Name", "Email", "Address"];
+        return ["Name", "Address"];
     }
   };
+
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "—";
     try {
-      return new Date(dateString).toLocaleDateString();
+      // Use deterministic date formatting to avoid hydration mismatches
+      const date = new Date(dateString);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${month}/${day}/${year}`;
     } catch {
       return "—";
     }
@@ -142,6 +168,16 @@ export default function PeoplePage() {
       .slice(0, 2);
   };
 
+  const getAvatarColor = (name: string) => {
+    // Use soft green color for all avatars
+    return "text-[#464D3F]";
+  };
+  
+  const getAvatarBackground = () => {
+    // Use soft green background for all avatars
+    return { backgroundColor: '#C9E7B3' };
+  };
+
   return (
     <>
       <Head>
@@ -149,39 +185,36 @@ export default function PeoplePage() {
       </Head>
       <div>
         <PageHeader1
-        breadcrumbs={[{ url: "/", title: "Home" }, { url: "/people", title: "Neighbors" }]}
-        heading="Neighbors"
-        description="Manage community members and their memberships"
-        inputPlaceholder="Search by name, email, or address..."
-        inputIcon={<BiSearch />}
-        inputValue={searchQuery}
-        onInputChange={setSearchQuery}
-        buttons={[
-          {
-            title: "Add Neighbor",
-            variant: "primary",
-            size: "sm",
-            onClick: () => setIsAddModalOpen(true),
-          },
-        ]}
-      />
-
-      <div className="container mx-auto px-4 pb-8 sm:px-6 md:px-8">
-
-        {/* Filter Tabs */}
-        <FilterTabs
-          tabs={[
-            { id: "all", label: "All Neighbors", count: tabCounts.all },
-            { id: "members", label: "Members", count: tabCounts.members },
-            { id: "duplicates", label: "Duplicates", count: tabCounts.duplicates },
-          ]}
-          activeTab={activeTab}
-          onTabChange={(tabId) => setActiveTab(tabId as TabId)}
-          className="mb-6"
+          heading="Neighbors"
+          buttons={[]}
+          headerActions={
+            <div className="flex items-center justify-between gap-4 min-w-[400px]">
+              <div className="relative flex-1">
+                <BiSearch className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search neighbors"
+                  className="pl-11 h-12 w-full rounded-lg bg-gray-50 border border-gray-200 text-gray-600 placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-gray-300"
+                />
+              </div>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setIsAddModalOpen(true)}
+                className="shrink-0 whitespace-nowrap rounded-lg"
+                style={{ backgroundColor: '#C9E7B3', color: '#464D3F' }}
+              >
+                Add Neighbor
+              </Button>
+            </div>
+          }
         />
 
-        {/* Loading State */}
-        {loading && (
+      <div className="w-full px-4 pb-8 sm:px-6 md:px-8">
+
+        {/* Loading State - Only show skeleton on initial load */}
+        {loading && people.length === 0 && (
           <div className="py-12">
             <TableSkeleton rows={5} columns={3} />
           </div>
@@ -196,114 +229,131 @@ export default function PeoplePage() {
           />
         )}
 
-        {/* Table */}
-        {!loading && !error && (
-          <div className="overflow-x-auto rounded-lg border border-border-primary">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {getTableColumns().map((header) => (
-                    <TableHead key={header}>{header}</TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPeople.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={getTableColumns().length} className="text-center py-8 text-text-secondary">
-                      No neighbors found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredPeople.map((person) => {
-                    if (activeTab === "all") {
-                      return (
-                        <TableRow
-                          key={person.id}
-                          className="cursor-pointer hover:bg-background-secondary"
-                          onClick={() => setSelectedPerson(person)}
-                        >
-                          <TableCell>
-                            <div className="flex items-center gap-3">
-                              <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                                {person.full_name ? getInitials(person.full_name) : <BiUser className="size-5" />}
-                              </div>
-                              <span className="font-medium">{person.full_name}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {person.email ? (
-                              <CopyableText text={person.email} showIcon={true} />
-                            ) : (
-                              <span className="text-text-secondary">—</span>
-                            )}
-                          </TableCell>
-                          <TableCell>{person.address || "—"}</TableCell>
-                        </TableRow>
-                      );
-                    } else if (activeTab === "members") {
-                      return (
-                        <TableRow
-                          key={person.id}
-                          className="cursor-pointer hover:bg-background-secondary"
-                          onClick={() => setSelectedPerson(person)}
-                        >
-                          <TableCell>
-                            <div className="flex items-center gap-3">
-                              <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                                {person.full_name ? getInitials(person.full_name) : <BiUser className="size-5" />}
-                              </div>
-                              <span className="font-medium">{person.full_name}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {person.email ? (
-                              <CopyableText text={person.email} showIcon={true} />
-                            ) : (
-                              <span className="text-text-secondary">—</span>
-                            )}
-                          </TableCell>
-                          <TableCell>{person.address || "—"}</TableCell>
-                          <TableCell>{person.membership?.tier || "—"}</TableCell>
-                          <TableCell>{formatDate(person.membership?.last_renewal || null)}</TableCell>
-                        </TableRow>
-                      );
-                    } else {
-                      // Duplicates tab
-                      const duplicateGroup = (person as any)._duplicateGroup || [person];
-                      const uniqueTiers = Array.from(
-                        new Set(
-                          duplicateGroup
-                            .map((p: PersonWithMembership) => p.membership?.tier || "None")
-                            .filter((tier: string) => tier !== "None")
-                        )
-                      );
+        {/* Table - Show even while loading if we have data */}
+        {(!loading || people.length > 0) && !error && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+            {/* Filter Tabs */}
+            <div className="px-4 pt-4 pb-3 border-b border-gray-100">
+              <FilterTabs
+                tabs={[
+                  { id: "all", label: "All Neighbors", count: tabCounts.all },
+                  { id: "members", label: "Members", count: tabCounts.members },
+                  { id: "duplicates", label: "Duplicates", count: tabCounts.duplicates },
+                ]}
+                activeTab={activeTab}
+                onTabChange={(tabId) => setActiveTab(tabId as TabId)}
+              />
+            </div>
 
-                      return (
-                        <TableRow
-                          key={person.id}
-                          className="cursor-pointer hover:bg-background-secondary"
-                          onClick={() => setSelectedPerson(person)}
-                        >
-                          <TableCell>
-                            <div>
-                              <div className="font-medium">{person.email || "—"}</div>
-                              <div className="text-sm text-text-secondary">
-                                {duplicateGroup.length} person{duplicateGroup.length > 1 ? "s" : ""}
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <Table className="border-l-0 border-r-0">
+                <TableHeader>
+                  <TableRow className="border-b border-gray-200 bg-white hover:bg-white">
+                    {getTableColumns().map((header) => (
+                      <TableHead 
+                        key={header}
+                        className="px-6 py-4 text-sm font-medium text-gray-700 bg-white first:pl-6"
+                      >
+                        {header}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredPeople.length === 0 ? (
+                    <TableRow className="border-b border-gray-100">
+                      <TableCell 
+                        colSpan={getTableColumns().length} 
+                        className="text-center py-12 text-gray-500 bg-white"
+                      >
+                        No neighbors found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredPeople.map((person, index) => {
+                      if (activeTab === "all" || activeTab === "members") {
+                        // Table8-style: name and email in same cell, other columns inline
+                        return (
+                          <TableRow
+                            key={person.id}
+                            className="cursor-pointer bg-white border-b border-gray-100 hover:bg-gray-50/50 transition-colors"
+                            onClick={() => setSelectedPerson(person)}
+                          >
+                            <TableCell className="px-6 py-4 bg-white">
+                              <div className="grid grid-cols-[max-content_1fr] items-center gap-3">
+                                <div 
+                                  className={`relative flex size-10 items-center justify-center rounded-full font-semibold text-sm ${person.full_name ? getAvatarColor(person.full_name) : "bg-gray-100 text-gray-600"}`}
+                                  style={person.full_name ? getAvatarBackground() : {}}
+                                >
+                                  {person.full_name ? getInitials(person.full_name) : <BiUser className="size-5" />}
+                                </div>
+                                <div className="w-full max-w-lg">
+                                  <div className="font-medium text-gray-900">{person.full_name || "—"}</div>
+                                  {person.email ? (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigator.clipboard.writeText(person.email || "");
+                                        showToast.success("Copied to clipboard");
+                                      }}
+                                      className="text-sm font-normal text-gray-600 hover:text-gray-900 cursor-pointer mt-0.5"
+                                      aria-label="Copy email to clipboard"
+                                    >
+                                      {person.email}
+                                    </button>
+                                  ) : (
+                                    <span className="text-sm text-gray-400">—</span>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>{duplicateGroup.length}</TableCell>
-                          <TableCell>
-                            {uniqueTiers.length > 0 ? uniqueTiers.join(", ") : "—"}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    }
-                  })
-                )}
-              </TableBody>
-            </Table>
+                            </TableCell>
+                            <TableCell className="px-6 py-4 bg-white text-gray-600">{person.address || "—"}</TableCell>
+                            {activeTab === "members" && (
+                              <>
+                                <TableCell className="px-6 py-4 bg-white text-gray-600">{person.membership?.tier || "—"}</TableCell>
+                                <TableCell className="px-6 py-4 bg-white text-gray-600">{formatDate(person.membership?.last_renewal || null)}</TableCell>
+                              </>
+                            )}
+                          </TableRow>
+                        );
+                      } else {
+                        // Duplicates tab
+                        const duplicateGroup = (person as any)._duplicateGroup || [person];
+                        const uniqueTiers = Array.from(
+                          new Set(
+                            duplicateGroup
+                              .map((p: PersonWithMembership) => p.membership?.tier || "None")
+                              .filter((tier: string) => tier !== "None")
+                          )
+                        );
+
+                        return (
+                          <TableRow
+                            key={person.id}
+                            className="cursor-pointer bg-white border-b border-gray-100 hover:bg-gray-50/50 transition-colors"
+                            onClick={() => setSelectedPerson(person)}
+                          >
+                            <TableCell className="px-6 py-4 bg-white">
+                              <div>
+                                <div className="font-medium text-gray-900">{person.email || "—"}</div>
+                                <div className="text-sm text-gray-500 mt-0.5">
+                                  {duplicateGroup.length} person{duplicateGroup.length > 1 ? "s" : ""}
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="px-6 py-4 bg-white text-gray-600">{duplicateGroup.length}</TableCell>
+                            <TableCell className="px-6 py-4 bg-white text-gray-600">
+                              {uniqueTiers.length > 0 ? uniqueTiers.join(", ") : "—"}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      }
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         )}
       </div>
@@ -398,17 +448,18 @@ export default function PeoplePage() {
       >
         <div className="space-y-4">
           <div>
-            <label className="mb-2 block text-sm font-medium">Name *</label>
+            <label className="mb-2 block text-sm font-medium text-[#464D3F]">Name *</label>
             <Input
               value={newPersonForm.full_name}
               onChange={(e) =>
                 setNewPersonForm({ ...newPersonForm, full_name: e.target.value })
               }
               placeholder="Full name"
+              className="border-gray-200 focus:border-gray-300 focus:ring-2 focus:ring-[#C9E7B3]/20"
             />
           </div>
           <div>
-            <label className="mb-2 block text-sm font-medium">Email</label>
+            <label className="mb-2 block text-sm font-medium text-[#464D3F]">Email</label>
             <Input
               type="email"
               value={newPersonForm.email || ""}
@@ -416,23 +467,34 @@ export default function PeoplePage() {
                 setNewPersonForm({ ...newPersonForm, email: e.target.value || null })
               }
               placeholder="email@example.com"
+              className="border-gray-200 focus:border-gray-300 focus:ring-2 focus:ring-[#C9E7B3]/20"
             />
           </div>
           <div>
-            <label className="mb-2 block text-sm font-medium">Address</label>
+            <label className="mb-2 block text-sm font-medium text-[#464D3F]">Address</label>
             <Input
               value={newPersonForm.address || ""}
               onChange={(e) =>
                 setNewPersonForm({ ...newPersonForm, address: e.target.value || null })
               }
               placeholder="Street address"
+              className="border-gray-200 focus:border-gray-300 focus:ring-2 focus:ring-[#C9E7B3]/20"
             />
           </div>
           <div className="flex justify-end gap-3 pt-4">
-            <Button variant="secondary" onClick={() => setIsAddModalOpen(false)}>
+            <Button 
+              variant="secondary" 
+              onClick={() => setIsAddModalOpen(false)}
+              className="border-gray-200 text-gray-700 hover:bg-gray-50"
+            >
               Cancel
             </Button>
-            <Button variant="primary" onClick={handleAddPerson}>
+            <Button 
+              variant="primary" 
+              onClick={handleAddPerson}
+              className="rounded-lg"
+              style={{ backgroundColor: '#C9E7B3', color: '#464D3F', border: 'none' }}
+            >
               Add Neighbor
             </Button>
           </div>

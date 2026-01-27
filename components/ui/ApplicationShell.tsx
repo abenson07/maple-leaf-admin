@@ -1,7 +1,7 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import {
-  Badge,
   Button,
   DropdownMenu,
   DropdownMenuContent,
@@ -11,318 +11,391 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   Input,
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarProvider,
-  SidebarTrigger,
-  SidebarInput,
+  useMediaQuery,
 } from "@relume_io/relume-ui";
-import {
-  BiBarChartAlt2,
-  BiBell,
-  BiBuilding,
-  BiCalendar,
-  BiCog,
-  BiHelpCircle,
-  BiMap,
-  BiPieChartAlt2,
-  BiSearch,
-  BiStopwatch,
-  BiUser,
-} from "react-icons/bi";
-import { HiOutlineUsers, HiOutlineFilter } from "react-icons/hi";
-import { FiFolder, FiGlobe } from "react-icons/fi";
-import { RxChevronRight, RxChevronDown, RxCross2 } from "react-icons/rx";
-import { FaFistRaised } from "react-icons/fa";
-import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { RxChevronDown, RxChevronRight, RxCross2 } from "react-icons/rx";
+import { BiBell, BiSearch } from "react-icons/bi";
 import Link from "next/link";
-import { useRouter } from "next/router";
 
-const menuItems = [
-  { title: "Dashboard", url: "/dashboard", icon: BiPieChartAlt2 },
-  { title: "Calendar", url: "#", icon: BiCalendar },
-  { title: "My Tasks", url: "#", icon: BiStopwatch },
-  { title: "Projects", url: "#", icon: FiFolder },
-  { title: "Teams", url: "#", icon: HiOutlineUsers },
-  { title: "Leads", url: "#", icon: HiOutlineFilter },
-  { title: "Neighbors", url: "/people", icon: BiUser },
-  { title: "Routes", url: "/routes", icon: BiMap },
-  { title: "Businesses", url: "/businesses", icon: BiBuilding },
-];
+type ImageProps = {
+  url?: string;
+  src: string;
+  alt?: string;
+};
 
-const favouriteItems = [
-  { title: "Filllo Website", icon: FaFistRaised, color: "bg-red-500" },
-  { title: "Portfolio Tasks", icon: FiGlobe, color: "bg-blue-500" },
-];
+type NavLink = {
+  url: string;
+  title: string;
+  subMenuLinks?: NavLink[];
+};
 
-const footerItems = [
-  { title: "Support", url: "#", icon: BiHelpCircle },
-  { title: "Settings", url: "#", icon: BiCog },
-];
+type Props = {
+  logo: ImageProps;
+  navLinks: NavLink[];
+  children?: React.ReactNode;
+};
 
-export const ApplicationShell4 = ({ children }: { children: React.ReactNode }) => (
-  <AppSidebar>
-    <main className="flex-1 bg-background-secondary pt-16 lg:pt-18">
-      <Topbar />
-      {children}
-    </main>
-  </AppSidebar>
-);
+export type ApplicationShell6Props = React.ComponentPropsWithoutRef<"section"> & Partial<Props>;
 
-const Topbar = () => {
-  const [isSearchIconClicked, setIsSearchIconClicked] = useState(false);
+export const ApplicationShell6 = (props: ApplicationShell6Props) => {
+  const { logo, navLinks, children } = {
+    ...ApplicationShell6Defaults,
+    ...props,
+  };
+
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSearchIconClicked, setIsSearchIconClicked] = useState<boolean>(false);
+  const searchBarRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const isMobile = useMediaQuery("(max-width: 991px)");
+  useEffect(() => {
+    if (!isSearchIconClicked) {
+      return;
+    }
+    const handleClickOutside = (event: PointerEvent) => {
+      if (searchBarRef.current && !searchBarRef.current.contains(event.target as Node)) {
+        setIsSearchIconClicked(false);
+      }
+    };
+    document.addEventListener("pointerdown", handleClickOutside);
+    return () => {
+      document.removeEventListener("pointerdown", handleClickOutside);
+    };
+  }, [isSearchIconClicked]);
+
+  useEffect(() => {
+    if (!menuRef) {
+      return;
+    }
+    const handleClickOutside = (event: PointerEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", handleClickOutside);
+    return () => {
+      document.removeEventListener("pointerdown", handleClickOutside);
+    };
+  }, [isSearchIconClicked]);
 
   return (
-    <header className="fixed left-0 right-0 top-0 z-30 flex min-h-16 w-full items-center border-b border-border-primary bg-white px-4 md:min-h-18 md:px-8">
-      <div className="mx-auto grid size-full grid-cols-2 items-center justify-between gap-4 lg:grid-cols-[1fr_1.5fr_1fr]">
-        <div className="flex items-center gap-4">
-          <SidebarTrigger className="lg:hidden" />
-          <Link href="/" className="justify-self-start">
-            <img
-              src="https://d22po4pjz3o32e.cloudfront.net/logo-image.svg"
-              alt="MLCC Dashboard"
-              className="shrink-0"
+    <section id="relume">
+      <div 
+        className="sticky top-0 z-40 flex w-full flex-wrap items-center justify-between bg-white px-6 lg:px-8 rounded-b-lg"
+        style={{
+          boxShadow: '0px 1px 3px 0px rgba(0, 0, 0, 0.12), 0px 1px 1px 0px rgba(0, 0, 0, 0.14), 0px 2px 1px -1px rgba(0, 0, 0, 0.2)'
+        }}
+      >
+        <div className="flex min-h-16 items-center md:min-h-18">
+          <button
+            className="-ml-4 mr-4 flex size-12 flex-col items-center justify-center lg:hidden"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => {
+              setIsMobileMenuOpen(!isMobileMenuOpen);
+              setIsSearchIconClicked(false);
+            }}
+          >
+            <motion.span
+              className="my-[3px] h-0.5 w-6 bg-black"
+              animate={isMobileMenuOpen ? ["open", "rotatePhase"] : "closed"}
+              variants={topLineVariants}
             />
+            <motion.span
+              className="my-[3px] h-0.5 w-6 bg-black"
+              animate={isMobileMenuOpen ? "open" : "closed"}
+              variants={middleLineVariants}
+            />
+            <motion.span
+              className="my-[3px] h-0.5 w-6 bg-black"
+              animate={isMobileMenuOpen ? ["open", "rotatePhase"] : "closed"}
+              variants={bottomLineVariants}
+            />
+          </button>
+          <Link href={logo.url || "/"}>
+            <img src={logo.src} alt={logo.alt} />
           </Link>
         </div>
-        <div className="hidden lg:block lg:w-full lg:max-w-md lg:justify-self-center">
-          <SidebarInput
-            className="w-full"
-            placeholder="Search"
-            icon={<BiSearch className="size-6" />}
-          />
-        </div>
-        <TopbarActions
-          isSearchIconClicked={isSearchIconClicked}
-          setIsSearchIconClicked={setIsSearchIconClicked}
-        />
-      </div>
-      <AnimatePresence>
-        {isSearchIconClicked && (
-          <motion.div
-            variants={{
-              visible: { opacity: 1 },
-              hidden: { opacity: 0 },
-            }}
-            initial="hidden"
-            exit="hidden"
-            animate={isSearchIconClicked ? "visible" : "hidden"}
-            className="absolute bottom-0 left-0 right-0 top-16 flex min-h-16 max-w-md items-center justify-center border-b border-border-primary bg-white px-6 lg:hidden"
-          >
-            <Input
-              className="h-fit w-full"
-              placeholder="Search"
-              icon={<BiSearch className="size-6" />}
-            />
-            <button onClick={() => setIsSearchIconClicked(!isSearchIconClicked)}>
-              <RxCross2 className="ml-4 size-6" />
+        <div className="ml-auto flex flex-row items-center gap-4 lg:order-last">
+          <div className="hidden w-full max-w-md lg:block">
+            <Input className="w-full" placeholder="Search" icon={<BiSearch className="size-6" />} />
+          </div>
+          <div className="flex shrink-0 items-center gap-2 md:gap-4">
+            <button
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                setIsSearchIconClicked(!isSearchIconClicked);
+              }}
+              className="p-2 lg:hidden"
+            >
+              <BiSearch className="size-6" />
             </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </header>
+            <AnimatePresence>
+              {isSearchIconClicked && (
+                <motion.div
+                  ref={searchBarRef}
+                  variants={{
+                    visible: { opacity: 1 },
+                    hidden: { opacity: 0 },
+                  }}
+                  initial="hidden"
+                  exit="hidden"
+                  animate={isSearchIconClicked ? "visible" : "hidden"}
+                  className="absolute bottom-0 left-0 right-0 top-16 mt-px flex h-16 max-w-md items-center justify-center border-b border-border-primary bg-white px-6 lg:hidden"
+                >
+                  <Input
+                    className="h-fit w-full"
+                    placeholder="Search"
+                    icon={<BiSearch className="size-6" />}
+                  />
+                  <button onClick={() => setIsSearchIconClicked(!isSearchIconClicked)}>
+                    <RxCross2 className="ml-4 size-6" />
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <DropdownMenu>
+              <DropdownMenuTrigger className="relative">
+                <div className="absolute bottom-auto left-auto right-2 top-2 size-2 rounded-full bg-black outline outline-[3px] outline-offset-0 outline-white" />
+                <BiBell className="size-6" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="max-w-[19rem] px-0 bg-white rounded-lg border border-gray-200" align="end" sideOffset={0} style={{ boxShadow: '0px 3px 5px -1px rgba(0, 0, 0, 0.2), 0px 5px 8px 0px rgba(0, 0, 0, 0.14), 0px 1px 14px 0px rgba(0, 0, 0, 0.12)' }}>
+                <div className="flex flex-col">
+                  <div className="flex items-center justify-between px-4 py-2">
+                    <DropdownMenuLabel className="p-0 text-[#464D3F] font-semibold">Notifications</DropdownMenuLabel>
+                    <a href="#" className="text-sm text-gray-600 hover:text-[#464D3F] transition-colors">Mark as read</a>
+                  </div>
+                  <DropdownMenuSeparator className="bg-gray-200" />
+                  <div className="h-full max-h-[14rem] overflow-auto px-2 py-1">
+                  <DropdownMenuItem className="mt-2 grid grid-cols-[max-content_1fr] gap-2 px-2 py-1 hover:bg-gray-50 rounded transition-colors">
+                    <div className="flex size-full flex-col items-start justify-start">
+                      <img
+                        src="https://d22po4pjz3o32e.cloudfront.net/relume-icon.svg"
+                        alt="Avatar"
+                        className="size-6 rounded-full"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-gray-700">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                      <p className="mt-2 text-sm text-gray-500">11 Jan 2022</p>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="mt-2 grid grid-cols-[max-content_1fr] gap-2 px-2 py-1 hover:bg-gray-50 rounded transition-colors">
+                    <div className="flex size-full flex-col items-start justify-start">
+                      <img
+                        src="https://d22po4pjz3o32e.cloudfront.net/relume-icon.svg"
+                        alt="Avatar"
+                        className="size-6 rounded-full"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-gray-700">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                      <p className="mt-2 text-sm text-gray-500">11 Jan 2022</p>
+                    </div>
+                  </DropdownMenuItem>
+                  </div>
+                </div>
+                <DropdownMenuSeparator className="bg-gray-200" />
+                <div className="flex w-full items-end justify-end px-4 py-2">
+                  <Button variant="link" size="link" iconRight={<RxChevronRight />} asChild className="text-[#464D3F] hover:text-[#464D3F]">
+                    <a href="#">View All</a>
+                  </Button>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center p-0">
+                <img
+                  src="https://d22po4pjz3o32e.cloudfront.net/placeholder-image.svg"
+                  alt="Avatar"
+                  className="size-10 rounded-full object-cover"
+                />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                sideOffset={0}
+                className="mt-1.5 min-w-32 px-0 py-2 md:min-w-48 bg-white rounded-lg border border-gray-200"
+                style={{ boxShadow: '0px 3px 5px -1px rgba(0, 0, 0, 0.2), 0px 5px 8px 0px rgba(0, 0, 0, 0.14), 0px 1px 14px 0px rgba(0, 0, 0, 0.12)' }}
+              >
+                <DropdownMenuGroup>
+                  <DropdownMenuItem className="hover:bg-gray-50 transition-colors">
+                    <a href="#" className="text-gray-700 hover:text-[#464D3F]">My Profile</a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="hover:bg-gray-50 transition-colors">
+                    <a href="#" className="text-gray-700 hover:text-[#464D3F]">Profile Settings</a>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="mx-4 bg-gray-200" />
+                  <DropdownMenuItem className="hover:bg-gray-50 transition-colors">
+                    <a href="#" className="text-gray-700 hover:text-[#464D3F]">Log Out</a>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+        <motion.div
+          ref={menuRef}
+          variants={{
+            open: {
+              height: "var(--height-open, auto)",
+            },
+            close: {
+              height: "var(--height-closed, 0)",
+            },
+          }}
+          initial="close"
+          exit="close"
+          animate={isMobileMenuOpen ? "open" : "close"}
+          transition={{ duration: 0.4 }}
+          className="w-full overflow-hidden lg:order-2 lg:ml-6 lg:w-auto lg:grow lg:[--height-closed:auto] lg:[--height-open:auto]"
+        >
+          <div className="pb-8 pt-4 lg:flex lg:items-center lg:py-0">
+            {navLinks.map((navLink, index) =>
+              navLink.subMenuLinks && navLink.subMenuLinks.length > 0 ? (
+                <SubMenu key={index} navLink={navLink} isMobile={isMobile} />
+              ) : (
+                <Link key={index} href={navLink.url} className="block py-3 lg:px-4 lg:py-2 text-gray-700 hover:text-[#464D3F] transition-colors font-medium">
+                  {navLink.title}
+                </Link>
+              ),
+            )}
+          </div>
+        </motion.div>
+      </div>
+      <main className="relative min-h-[calc(100vh-4rem)] md:min-h-[calc(100vh-4.5rem)]">
+        <div 
+          className="fixed inset-0 -z-10"
+          style={{ 
+            background: '#F7F7EC',
+            height: '100vh',
+            width: '100vw'
+          }}
+        />
+        <div className="relative z-0">
+          {children}
+        </div>
+      </main>
+    </section>
   );
 };
 
-const TopbarActions = ({
-  isSearchIconClicked,
-  setIsSearchIconClicked,
-}: {
-  isSearchIconClicked: boolean;
-  setIsSearchIconClicked: (value: boolean) => void;
-}) => {
+const SubMenu = ({ navLink, isMobile }: { navLink: NavLink; isMobile: boolean }) => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
   return (
-    <div className="flex items-center gap-2 justify-self-end md:gap-4">
+    <div
+      onMouseEnter={() => !isMobile && setIsDropdownOpen(true)}
+      onMouseLeave={() => !isMobile && setIsDropdownOpen(false)}
+    >
       <button
-        onClick={() => setIsSearchIconClicked(!isSearchIconClicked)}
-        className="p-2 lg:hidden"
+        className="flex w-full items-center justify-between gap-2 py-3 text-left lg:flex-none lg:justify-start lg:px-4 lg:py-2 text-gray-700 hover:text-[#464D3F] transition-colors font-medium"
+        onClick={() => setIsDropdownOpen((prev) => !prev)}
       >
-        <BiSearch className="size-6" />
+        <span>{navLink.title}</span>
+        <motion.span
+          variants={{
+            rotated: { rotate: 180 },
+            initial: { rotate: 0 },
+          }}
+          animate={isDropdownOpen ? "rotated" : "initial"}
+          transition={{ duration: 0.3 }}
+        >
+          <RxChevronDown />
+        </motion.span>
       </button>
-      <DropdownMenu>
-        <DropdownMenuTrigger className="relative">
-          <div className="absolute bottom-auto left-auto right-2 top-2 size-2 rounded-full bg-black outline outline-[3px] outline-offset-0 outline-white" />
-          <BiBell className="size-6" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="max-w-[19rem] px-0" align="end" sideOffset={0}>
-          <div className="flex flex-col">
-            <div className="flex items-center justify-between px-4 py-2">
-              <DropdownMenuLabel className="p-0">Notifications</DropdownMenuLabel>
-              <a href="#">Mark as read</a>
-            </div>
-            <DropdownMenuSeparator />
-            <div className="h-full max-h-[14rem] overflow-auto px-2 py-1">
-              <DropdownMenuItem className="mt-2 grid grid-cols-[max-content_1fr] gap-2 px-2 py-1">
-                <div className="flex size-full flex-col items-start justify-start">
-                  <img
-                    src="https://d22po4pjz3o32e.cloudfront.net/relume-icon.svg"
-                    alt="Avatar"
-                    className="size-6"
-                  />
-                </div>
-                <div>
-                  <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                  <p className="mt-2 text-sm">11 Jan 2022</p>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="mt-2 grid grid-cols-[max-content_1fr] gap-2 px-2 py-1">
-                <div className="flex size-full flex-col items-start justify-start">
-                  <img
-                    src="https://d22po4pjz3o32e.cloudfront.net/relume-icon.svg"
-                    alt="Avatar"
-                    className="size-6"
-                  />
-                </div>
-                <div>
-                  <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                  <p className="mt-2 text-sm">11 Jan 2022</p>
-                </div>
-              </DropdownMenuItem>
-            </div>
-          </div>
-          <DropdownMenuSeparator />
-          <div className="flex w-full items-end justify-end px-4 py-2">
-            <Button variant="link" size="link" iconRight={<RxChevronRight />} asChild>
-              <a href="#">View All</a>
-            </Button>
-          </div>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <DropdownMenu>
-        <DropdownMenuTrigger className="flex items-center p-0">
-          <img
-            src="https://d22po4pjz3o32e.cloudfront.net/avatar-image.svg"
-            alt="Avatar"
-            className="size-10 rounded-full object-cover"
-          />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" sideOffset={0} className="mt-1.5 px-0 py-2">
-          <DropdownMenuGroup>
-            <DropdownMenuItem>
-              <a href="#">My Profile</a>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <a href="#">Profile Settings</a>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator className="mx-4" />
-            <DropdownMenuItem>
-              <a href="#">Log Out</a>
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {isDropdownOpen && (
+        <AnimatePresence>
+          <motion.nav
+            variants={{
+              open: {
+                visibility: "visible",
+                opacity: "var(--opacity-open, 100%)",
+                y: 0,
+              },
+              close: {
+                visibility: "hidden",
+                opacity: "var(--opacity-close, 0)",
+                y: "var(--y-close, 0%)",
+              },
+            }}
+            animate={isDropdownOpen ? "open" : "close"}
+            initial="close"
+            exit="close"
+            transition={{ duration: 0.2 }}
+            className="bg-white lg:absolute lg:z-50 lg:border lg:border-gray-200 lg:p-2 lg:rounded-lg lg:[--y-close:25%]"
+            style={{ boxShadow: '0px 3px 5px -1px rgba(0, 0, 0, 0.2), 0px 5px 8px 0px rgba(0, 0, 0, 0.14), 0px 1px 14px 0px rgba(0, 0, 0, 0.12)' }}
+          >
+            {navLink.subMenuLinks?.map((navLink, index) => (
+              <Link key={index} href={navLink.url} className="block px-4 py-2 text-gray-600 hover:text-[#464D3F] transition-colors">
+                {navLink.title}
+              </Link>
+            ))}
+          </motion.nav>
+        </AnimatePresence>
+      )}
     </div>
   );
 };
 
-const AppSidebar = ({ children }: { children: React.ReactNode }) => {
-  const router = useRouter();
-  const currentPath = router?.pathname || "/";
+export const ApplicationShell6Defaults: Props = {
+  logo: {
+    url: "/",
+    src: "https://d22po4pjz3o32e.cloudfront.net/logo-image.svg",
+    alt: "MLCC Dashboard",
+  },
+  navLinks: [
+    { title: "Dashboard", url: "/dashboard" },
+    { title: "Neighbors", url: "/people" },
+    { title: "Routes", url: "/routes" },
+    { title: "Businesses", url: "/businesses" },
+  ],
+};
 
-  return (
-    <SidebarProvider>
-      <Sidebar className="bg-gray-50 border-r border-gray-200" closeButtonClassName="fixed top-4 right-4 text-gray-600">
-        <SidebarContent className="pt-6">
-          {/* Header Section with Logo and Branding */}
-          <div className="px-6 pb-6 mb-4 border-b border-gray-200">
-            <div className="flex items-start gap-3 mb-2">
-              <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center shrink-0">
-                <span className="text-white text-xl font-bold">S</span>
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-lg font-bold text-gray-900">MLCC Admin</h2>
-                    <p className="text-sm text-gray-500">Community Dashboard</p>
-                  </div>
-                  <button className="text-gray-400 hover:text-gray-600">
-                    <RxChevronDown className="size-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+// Export ApplicationShell4 as an alias to ApplicationShell6 for backward compatibility
+export const ApplicationShell4 = ({ children }: { children: React.ReactNode }) => (
+  <ApplicationShell6>{children}</ApplicationShell6>
+);
 
-          <SidebarMenu className="px-3">
-            {/* Updates Item with Badge */}
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild className="hover:bg-transparent">
-                <Link href="#" className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 transition-colors">
-                  <BiBell className="size-5 shrink-0 text-gray-700" />
-                  <span className="text-gray-700 flex-1">Updates</span>
-                  <span className="size-5 rounded-full bg-red-500 flex items-center justify-center shrink-0">
-                    <span className="text-white text-xs font-medium">2</span>
-                  </span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+const topLineVariants = {
+  open: {
+    translateY: 8,
+    transition: { delay: 0.1 },
+  },
+  rotatePhase: {
+    rotate: -45,
+    transition: { delay: 0.2 },
+  },
+  closed: {
+    translateY: 0,
+    rotate: 0,
+    transition: { duration: 0.2 },
+  },
+};
 
-            {/* Main Navigation Items */}
-            {menuItems.map((item, index) => {
-              const isActive = currentPath === item.url || (item.url !== "/" && currentPath.startsWith(item.url));
-              return (
-                <SidebarMenuItem key={index}>
-                  <SidebarMenuButton asChild isActive={false} className="hover:bg-transparent">
-                    <Link 
-                      href={item.url} 
-                      className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-                        isActive 
-                          ? "bg-blue-50" 
-                          : "hover:bg-gray-100"
-                      }`}
-                    >
-                      <item.icon className={`size-5 shrink-0 ${isActive ? "text-blue-600" : "text-gray-700"}`} />
-                      <span className={isActive ? "text-blue-600 font-medium" : "text-gray-700"}>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              );
-            })}
-          </SidebarMenu>
+const middleLineVariants = {
+  open: {
+    width: 0,
+    transition: { duration: 0.1 },
+  },
+  closed: {
+    width: "1.5rem",
+    transition: { delay: 0.3, duration: 0.2 },
+  },
+};
 
-          {/* Favourite Section */}
-          <div className="px-3 mt-6 pt-6 border-t border-gray-200">
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-3">FAVOURITE</h3>
-            <SidebarMenu>
-              {favouriteItems.map((item, index) => {
-                const IconComponent = item.icon;
-                return (
-                  <SidebarMenuItem key={index}>
-                    <SidebarMenuButton asChild className="hover:bg-transparent">
-                      <Link href="#" className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 transition-colors">
-                        <div className={`size-8 rounded-full ${item.color} flex items-center justify-center shrink-0`}>
-                          <IconComponent className="text-white text-sm" />
-                        </div>
-                        <span className="text-gray-700">{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </div>
-        </SidebarContent>
-        <SidebarFooter className="mt-auto border-t border-gray-200 pt-4">
-          <SidebarMenu className="px-3">
-            {footerItems.map((item, index) => (
-              <SidebarMenuItem key={index}>
-                <SidebarMenuButton asChild className="hover:bg-transparent">
-                  <a href={item.url} className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 transition-colors">
-                    <item.icon className="size-5 shrink-0 text-gray-700" />
-                    <span className="text-gray-700">{item.title}</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarFooter>
-      </Sidebar>
-      {children}
-    </SidebarProvider>
-  );
+const bottomLineVariants = {
+  open: {
+    translateY: -8,
+    transition: { delay: 0.1 },
+  },
+  rotatePhase: {
+    rotate: 45,
+    transition: { delay: 0.2 },
+  },
+  closed: {
+    translateY: 0,
+    rotate: 0,
+    transition: { duration: 0.2 },
+  },
 };

@@ -16,6 +16,7 @@ import {
   TableRow,
   Button,
   Badge,
+  Input,
 } from "@relume_io/relume-ui";
 import { BiSearch, BiPlus, BiBuilding, BiX } from "react-icons/bi";
 import { CopyableText } from "@/components/CopyableText";
@@ -146,7 +147,12 @@ export default function BusinessesPage() {
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "—";
     try {
-      return new Date(dateString).toLocaleDateString();
+      // Use deterministic date formatting to avoid hydration mismatches
+      const date = new Date(dateString);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${month}/${day}/${year}`;
     } catch {
       return "—";
     }
@@ -166,39 +172,36 @@ export default function BusinessesPage() {
       </Head>
       <div>
         <PageHeader1
-        breadcrumbs={[{ url: "/", title: "Home" }, { url: "/businesses", title: "Businesses" }]}
-        heading="Businesses"
-        description="Manage business sponsors and their memberships"
-        inputPlaceholder="Search by company name or contact name..."
-        inputIcon={<BiSearch />}
-        inputValue={searchQuery}
-        onInputChange={setSearchQuery}
-        buttons={[
-          {
-            title: "Add Business",
-            variant: "primary",
-            size: "sm",
-            onClick: () => setIsAddModalOpen(true),
-          },
-        ]}
-      />
-
-      <div className="container mx-auto px-4 pb-8 sm:px-6 md:px-8">
-        {/* Filter Tabs */}
-        <FilterTabs
-          tabs={[
-            { id: "all", label: "All Businesses", count: tabCounts.all },
-            { id: "active", label: "Active Members", count: tabCounts.active },
-            { id: "past", label: "Past Sponsors", count: tabCounts.past },
-            { id: "yet-to-support", label: "Yet to Support", count: tabCounts["yet-to-support"] },
-          ]}
-          activeTab={activeTab}
-          onTabChange={(tabId) => setActiveTab(tabId as TabId)}
-          className="mb-6"
+          heading="Businesses"
+          buttons={[]}
+          headerActions={
+            <div className="flex items-center justify-between gap-4 min-w-[400px]">
+              <div className="relative flex-1">
+                <BiSearch className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search businesses"
+                  className="pl-11 h-12 w-full rounded-lg bg-gray-50 border border-gray-200 text-gray-600 placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-gray-300"
+                />
+              </div>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setIsAddModalOpen(true)}
+                className="shrink-0 whitespace-nowrap rounded-lg"
+                style={{ backgroundColor: '#C9E7B3', color: '#464D3F' }}
+              >
+                Add Business
+              </Button>
+            </div>
+          }
         />
 
-        {/* Loading State */}
-        {loading && (
+      <div className="w-full px-4 pb-8 sm:px-6 md:px-8">
+
+        {/* Loading State - Only show skeleton on initial load */}
+        {loading && businesses.length === 0 && (
           <div className="py-12">
             <TableSkeleton rows={5} columns={8} />
           </div>
@@ -213,92 +216,109 @@ export default function BusinessesPage() {
           />
         )}
 
-        {/* Table */}
-        {!loading && !error && (
-          <div className="overflow-x-auto rounded-lg border border-border-primary">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Company Name</TableHead>
-                  <TableHead>Contact Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Address</TableHead>
-                  <TableHead>Sponsorship Tags</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {businesses.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-text-secondary">
-                      No businesses found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  businesses.map((business) => {
-                    const tags = getSponsorshipTags(business);
-                    const status =
-                      business.membership?.status === "active" ? "Active" : "Inactive";
+        {/* Table - Show even while loading if we have data */}
+        {(!loading || businesses.length > 0) && !error && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+            {/* Filter Tabs */}
+            <div className="px-4 pt-4 pb-3 border-b border-gray-100">
+              <FilterTabs
+                tabs={[
+                  { id: "all", label: "All Businesses", count: tabCounts.all },
+                  { id: "active", label: "Active Members", count: tabCounts.active },
+                  { id: "past", label: "Past Sponsors", count: tabCounts.past },
+                  { id: "yet-to-support", label: "Yet to Support", count: tabCounts["yet-to-support"] },
+                ]}
+                activeTab={activeTab}
+                onTabChange={(tabId) => setActiveTab(tabId as TabId)}
+              />
+            </div>
 
-                    return (
-                      <TableRow
-                        key={business.id}
-                        className="cursor-pointer hover:bg-background-secondary"
-                        onClick={() => setSelectedBusiness(business)}
-                      >
-                        <TableCell className="font-medium">
-                          {business.business_name || "—"}
-                        </TableCell>
-                        <TableCell>{business.contact_name || "—"}</TableCell>
-                        <TableCell>
-                          {business.email ? (
-                            <CopyableText text={business.email} showIcon={true} />
-                          ) : (
-                            <span className="text-text-secondary">—</span>
-                          )}
-                        </TableCell>
-                        <TableCell>{business.phone || "—"}</TableCell>
-                        <TableCell>{business.address || "—"}</TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {tags.length > 0 ? (
-                              tags.map((tag) => (
-                                <Badge
-                                  key={tag}
-                                  variant="outline"
-                                  className={
-                                    tag === "Gold"
-                                      ? "border-yellow-500 text-yellow-600"
-                                      : tag === "Silver"
-                                        ? "border-gray-400 text-gray-600"
-                                        : tag === "Bronze"
-                                          ? "border-orange-500 text-orange-600"
-                                          : ""
-                                  }
-                                >
-                                  {tag}
-                                </Badge>
-                              ))
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <Table className="border-l-0 border-r-0">
+                <TableHeader>
+                  <TableRow className="border-b border-gray-200 bg-white hover:bg-white">
+                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Company Name</TableHead>
+                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Contact Name</TableHead>
+                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Email</TableHead>
+                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Phone</TableHead>
+                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Address</TableHead>
+                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Sponsorship Tags</TableHead>
+                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {businesses.length === 0 ? (
+                    <TableRow className="border-b border-gray-100">
+                      <TableCell colSpan={7} className="text-center py-12 text-gray-500 bg-white">
+                        No businesses found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    businesses.map((business) => {
+                      const tags = getSponsorshipTags(business);
+                      const status =
+                        business.membership?.status === "active" ? "Active" : "Inactive";
+
+                      return (
+                        <TableRow
+                          key={business.id}
+                          className="cursor-pointer bg-white border-b border-gray-100 hover:bg-gray-50/50 transition-colors"
+                          onClick={() => setSelectedBusiness(business)}
+                        >
+                          <TableCell className="px-6 py-4 bg-white font-medium text-gray-900">
+                            {business.business_name || "—"}
+                          </TableCell>
+                          <TableCell className="px-6 py-4 bg-white text-gray-600">{business.contact_name || "—"}</TableCell>
+                          <TableCell className="px-6 py-4 bg-white">
+                            {business.email ? (
+                              <CopyableText text={business.email} showIcon={true} />
                             ) : (
-                              <span className="text-text-secondary">—</span>
+                              <span className="text-gray-400">—</span>
                             )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={status === "Active" ? "default" : "outline"}
-                            className={status === "Active" ? "bg-success/10 text-success" : ""}
-                          >
-                            {status}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
+                          </TableCell>
+                          <TableCell className="px-6 py-4 bg-white text-gray-600">{business.phone || "—"}</TableCell>
+                          <TableCell className="px-6 py-4 bg-white text-gray-600">{business.address || "—"}</TableCell>
+                          <TableCell className="px-6 py-4 bg-white">
+                            <div className="flex flex-wrap gap-1">
+                              {tags.length > 0 ? (
+                                tags.map((tag) => (
+                                  <Badge
+                                    key={tag}
+                                    variant="outline"
+                                    className={
+                                      tag === "Gold"
+                                        ? "border-yellow-500 text-yellow-600"
+                                        : tag === "Silver"
+                                          ? "border-gray-400 text-gray-600"
+                                          : tag === "Bronze"
+                                            ? "border-orange-500 text-orange-600"
+                                            : ""
+                                    }
+                                  >
+                                    {tag}
+                                  </Badge>
+                                ))
+                              ) : (
+                                <span className="text-gray-400">—</span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="px-6 py-4 bg-white">
+                            <Badge
+                              variant={status === "Active" ? "default" : "outline"}
+                              className={status === "Active" ? "bg-success/10 text-success" : ""}
+                            >
+                              {status}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         )}
       </div>
@@ -478,7 +498,7 @@ export default function BusinessesPage() {
       >
         <div className="space-y-4">
           <div>
-            <label className="mb-2 block text-sm font-medium">Company Name *</label>
+            <label className="mb-2 block text-sm font-medium text-[#464D3F]">Company Name *</label>
             <input
               type="text"
               value={newBusinessForm.business_name || ""}
@@ -486,11 +506,11 @@ export default function BusinessesPage() {
                 setNewBusinessForm({ ...newBusinessForm, business_name: e.target.value || null })
               }
               placeholder="Company name"
-              className="w-full rounded-lg border border-border-primary px-4 py-2"
+              className="w-full rounded-lg border border-gray-200 px-4 py-2 text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C9E7B3]/20 focus:border-gray-300"
             />
           </div>
           <div>
-            <label className="mb-2 block text-sm font-medium">Contact Name</label>
+            <label className="mb-2 block text-sm font-medium text-[#464D3F]">Contact Name</label>
             <input
               type="text"
               value={newBusinessForm.contact_name || ""}
@@ -498,11 +518,11 @@ export default function BusinessesPage() {
                 setNewBusinessForm({ ...newBusinessForm, contact_name: e.target.value || null })
               }
               placeholder="Contact name"
-              className="w-full rounded-lg border border-border-primary px-4 py-2"
+              className="w-full rounded-lg border border-gray-200 px-4 py-2 text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C9E7B3]/20 focus:border-gray-300"
             />
           </div>
           <div>
-            <label className="mb-2 block text-sm font-medium">Email</label>
+            <label className="mb-2 block text-sm font-medium text-[#464D3F]">Email</label>
             <input
               type="email"
               value={newBusinessForm.email || ""}
@@ -510,11 +530,11 @@ export default function BusinessesPage() {
                 setNewBusinessForm({ ...newBusinessForm, email: e.target.value || null })
               }
               placeholder="email@example.com"
-              className="w-full rounded-lg border border-border-primary px-4 py-2"
+              className="w-full rounded-lg border border-gray-200 px-4 py-2 text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C9E7B3]/20 focus:border-gray-300"
             />
           </div>
           <div>
-            <label className="mb-2 block text-sm font-medium">Phone</label>
+            <label className="mb-2 block text-sm font-medium text-[#464D3F]">Phone</label>
             <input
               type="tel"
               value={newBusinessForm.phone || ""}
@@ -522,11 +542,11 @@ export default function BusinessesPage() {
                 setNewBusinessForm({ ...newBusinessForm, phone: e.target.value || null })
               }
               placeholder="Phone number"
-              className="w-full rounded-lg border border-border-primary px-4 py-2"
+              className="w-full rounded-lg border border-gray-200 px-4 py-2 text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C9E7B3]/20 focus:border-gray-300"
             />
           </div>
           <div>
-            <label className="mb-2 block text-sm font-medium">Address</label>
+            <label className="mb-2 block text-sm font-medium text-[#464D3F]">Address</label>
             <input
               type="text"
               value={newBusinessForm.address || ""}
@@ -534,14 +554,23 @@ export default function BusinessesPage() {
                 setNewBusinessForm({ ...newBusinessForm, address: e.target.value || null })
               }
               placeholder="Street address"
-              className="w-full rounded-lg border border-border-primary px-4 py-2"
+              className="w-full rounded-lg border border-gray-200 px-4 py-2 text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C9E7B3]/20 focus:border-gray-300"
             />
           </div>
           <div className="flex justify-end gap-3 pt-4">
-            <Button variant="secondary" onClick={() => setIsAddModalOpen(false)}>
+            <Button 
+              variant="secondary" 
+              onClick={() => setIsAddModalOpen(false)}
+              className="border-gray-200 text-gray-700 hover:bg-gray-50"
+            >
               Cancel
             </Button>
-            <Button variant="primary" onClick={handleAddBusiness}>
+            <Button 
+              variant="primary" 
+              onClick={handleAddBusiness}
+              className="rounded-lg"
+              style={{ backgroundColor: '#C9E7B3', color: '#464D3F', border: 'none' }}
+            >
               Add Business
             </Button>
           </div>

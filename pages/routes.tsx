@@ -13,8 +13,9 @@ import {
   TableHeader,
   TableRow,
   Button,
+  Input,
 } from "@relume_io/relume-ui";
-import { BiSearch, BiMap, BiX, BiChevronDown, BiChevronRight } from "react-icons/bi";
+import { BiSearch, BiMap, BiX } from "react-icons/bi";
 import { ErrorMessage } from "@/components/ErrorMessage";
 import { TableSkeleton } from "@/components/skeletons";
 
@@ -24,7 +25,6 @@ export default function RoutesPage() {
   const { activeTab, setActiveTab } = useFilterTabs("by-route");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRoute, setSelectedRoute] = useState<RouteWithDeliverer | null>(null);
-  const [expandedDeliverers, setExpandedDeliverers] = useState<Set<string>>(new Set());
 
   // Determine filters based on active tab
   const filters = useMemo(() => {
@@ -79,17 +79,6 @@ export default function RoutesPage() {
     };
   }, [routes, routesByDeliverer]);
 
-  const toggleDeliverer = (delivererId: string) => {
-    setExpandedDeliverers((prev) => {
-      const next = new Set(prev);
-      if (next.has(delivererId)) {
-        next.delete(delivererId);
-      } else {
-        next.add(delivererId);
-      }
-      return next;
-    });
-  };
 
   const getDelivererName = (route: RouteWithDeliverer) => {
     if (route.primary_deliverer) {
@@ -98,11 +87,6 @@ export default function RoutesPage() {
     return route.primary_deliverer_email || "Unassigned";
   };
 
-  const getDropoffLocation = (route: RouteWithDeliverer) => {
-    // This would come from a deliveries table or route details
-    // For now, return a placeholder
-    return "See details";
-  };
 
   return (
     <>
@@ -111,31 +95,27 @@ export default function RoutesPage() {
       </Head>
       <div>
         <PageHeader1
-        breadcrumbs={[{ url: "/", title: "Home" }, { url: "/routes", title: "Routes" }]}
-        heading="Routes"
-        description="Manage delivery routes and deliverer assignments"
-        inputPlaceholder="Search routes..."
-        inputIcon={<BiSearch />}
-        inputValue={searchQuery}
-        onInputChange={setSearchQuery}
-        buttons={[]}
-      />
-
-      <div className="container mx-auto px-4 pb-8 sm:px-6 md:px-8">
-        {/* Filter Tabs */}
-        <FilterTabs
-          tabs={[
-            { id: "by-route", label: "By Route", count: tabCounts["by-route"] },
-            { id: "by-deliverer", label: "By Deliverer", count: tabCounts["by-deliverer"] },
-            { id: "open-routes", label: "Open Routes", count: tabCounts["open-routes"] },
-          ]}
-          activeTab={activeTab}
-          onTabChange={(tabId) => setActiveTab(tabId as TabId)}
-          className="mb-6"
+          heading="Routes"
+          buttons={[]}
+          headerActions={
+            <div className="flex items-center justify-between gap-4 min-w-[400px]">
+              <div className="relative flex-1">
+                <BiSearch className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search routes"
+                  className="pl-11 h-12 w-full rounded-lg bg-gray-50 border border-gray-200 text-gray-600 placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-gray-300"
+                />
+              </div>
+            </div>
+          }
         />
 
-        {/* Loading State */}
-        {loading && (
+      <div className="w-full px-4 pb-8 sm:px-6 md:px-8">
+
+        {/* Loading State - Only show skeleton on initial load */}
+        {loading && routes.length === 0 && (
           <div className="py-12">
             <TableSkeleton rows={5} columns={4} />
           </div>
@@ -150,163 +130,208 @@ export default function RoutesPage() {
           />
         )}
 
-        {/* By Route Tab */}
-        {!loading && !error && activeTab === "by-route" && (
-          <div className="overflow-x-auto rounded-lg border border-border-primary">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Route Name</TableHead>
-                  <TableHead>Leaflets</TableHead>
-                  <TableHead>Dropoff Location</TableHead>
-                  <TableHead>Deliverer</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {routes.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center py-8 text-text-secondary">
-                      No routes found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  routes.map((route) => (
-                    <TableRow
-                      key={route.id}
-                      className="cursor-pointer hover:bg-background-secondary"
-                      onClick={() => setSelectedRoute(route)}
-                    >
-                      <TableCell className="font-medium">{route.route_name}</TableCell>
-                      <TableCell>{route.leaflet_count || 0}</TableCell>
-                      <TableCell>{getDropoffLocation(route)}</TableCell>
-                      <TableCell>{getDelivererName(route)}</TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        )}
+        {/* By Route Tab - Show even while loading if we have data */}
+        {(!loading || routes.length > 0) && !error && activeTab === "by-route" && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+            {/* Filter Tabs */}
+            <div className="px-4 pt-4 pb-3 border-b border-gray-100">
+              <FilterTabs
+                tabs={[
+                  { id: "by-route", label: "By Route", count: tabCounts["by-route"] },
+                  { id: "by-deliverer", label: "By Deliverer", count: tabCounts["by-deliverer"] },
+                  { id: "open-routes", label: "Open Routes", count: tabCounts["open-routes"] },
+                ]}
+                activeTab={activeTab}
+                onTabChange={(tabId) => setActiveTab(tabId as TabId)}
+              />
+            </div>
 
-        {/* By Deliverer Tab - Expandable Grouped Table */}
-        {!loading && !error && activeTab === "by-deliverer" && (
-          <div className="overflow-x-auto rounded-lg border border-border-primary">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Deliverer</TableHead>
-                  <TableHead>Routes</TableHead>
-                  <TableHead>Total Leaflets</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {routesByDeliverer.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={3} className="text-center py-8 text-text-secondary">
-                      No deliverers found
-                    </TableCell>
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <Table className="border-l-0 border-r-0">
+                <TableHeader>
+                  <TableRow className="border-b border-gray-200 bg-white hover:bg-white">
+                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Route Name</TableHead>
+                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Leaflets</TableHead>
+                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Deliverer</TableHead>
                   </TableRow>
-                ) : (
-                  routesByDeliverer.map(({ delivererId, deliverer, routes: delivererRoutes }) => {
-                    const isExpanded = expandedDeliverers.has(delivererId);
-                    const totalLeaflets = delivererRoutes.reduce(
-                      (sum, r) => sum + (r.leaflet_count || 0),
-                      0
-                    );
-                    const delivererName = deliverer?.full_name || "Unknown";
-
-                    return (
-                      <React.Fragment key={delivererId}>
-                        <TableRow className="bg-background-secondary">
-                          <TableCell>
-                            <button
-                              onClick={() => toggleDeliverer(delivererId)}
-                              className="flex items-center gap-2 font-semibold hover:text-primary"
-                            >
-                              {isExpanded ? (
-                                <BiChevronDown className="size-5" />
-                              ) : (
-                                <BiChevronRight className="size-5" />
-                              )}
-                              {delivererName}
-                            </button>
-                          </TableCell>
-                          <TableCell>{delivererRoutes.length}</TableCell>
-                          <TableCell>{totalLeaflets}</TableCell>
-                        </TableRow>
-                        {isExpanded &&
-                          delivererRoutes.map((route) => (
-                            <TableRow
-                              key={route.id}
-                              className="cursor-pointer hover:bg-background-secondary/50"
-                              onClick={() => setSelectedRoute(route)}
-                            >
-                              <TableCell className="pl-8">
-                                <div className="flex items-center gap-2">
-                                  <BiMap className="size-4 text-text-secondary" />
-                                  {route.route_name}
-                                </div>
-                              </TableCell>
-                              <TableCell>{route.leaflet_count || 0}</TableCell>
-                              <TableCell>{getDropoffLocation(route)}</TableCell>
-                            </TableRow>
-                          ))}
-                      </React.Fragment>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-
-        {/* Open Routes Tab */}
-        {!loading && !error && activeTab === "open-routes" && (
-          <div className="overflow-x-auto rounded-lg border border-border-primary">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Route Name</TableHead>
-                  <TableHead>Leaflets</TableHead>
-                  <TableHead>Route Type</TableHead>
-                  <TableHead>Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {routes.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center py-8 text-text-secondary">
-                      No open routes found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  routes.map((route) => (
-                    <TableRow
-                      key={route.id}
-                      className="cursor-pointer hover:bg-background-secondary"
-                      onClick={() => setSelectedRoute(route)}
-                    >
-                      <TableCell className="font-medium">{route.route_name}</TableCell>
-                      <TableCell>{route.leaflet_count || 0}</TableCell>
-                      <TableCell>{route.route_type || "—"}</TableCell>
-                      <TableCell>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            // Placeholder for assign functionality
-                            alert("Assign functionality coming soon");
-                          }}
-                        >
-                          Assign
-                        </Button>
+                </TableHeader>
+                <TableBody>
+                  {routes.length === 0 ? (
+                    <TableRow className="border-b border-gray-100">
+                      <TableCell colSpan={3} className="text-center py-12 text-gray-500 bg-white">
+                        No routes found
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    routes.map((route) => (
+                      <TableRow
+                        key={route.id}
+                        className="cursor-pointer bg-white border-b border-gray-100 hover:bg-gray-50/50 transition-colors"
+                        onClick={() => setSelectedRoute(route)}
+                      >
+                        <TableCell className="px-6 py-4 bg-white font-medium text-gray-900">{route.route_name}</TableCell>
+                        <TableCell className="px-6 py-4 bg-white text-gray-600">{route.leaflet_count || 0}</TableCell>
+                        <TableCell className="px-6 py-4 bg-white text-gray-600">{getDelivererName(route)}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        )}
+
+        {/* By Deliverer Tab - Wrapper divs for each deliverer - Show even while loading if we have data */}
+        {(!loading || routes.length > 0) && !error && activeTab === "by-deliverer" && (
+          <div className="space-y-4">
+            {/* Filter Tabs */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+              <div className="px-4 pt-4 pb-3 border-b border-gray-100">
+                <FilterTabs
+                  tabs={[
+                    { id: "by-route", label: "By Route", count: tabCounts["by-route"] },
+                    { id: "by-deliverer", label: "By Deliverer", count: tabCounts["by-deliverer"] },
+                    { id: "open-routes", label: "Open Routes", count: tabCounts["open-routes"] },
+                  ]}
+                  activeTab={activeTab}
+                  onTabChange={(tabId) => setActiveTab(tabId as TabId)}
+                />
+              </div>
+            </div>
+
+            {/* Deliverer Wrapper Divs */}
+            {routesByDeliverer.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-12 text-center text-gray-500">
+                No deliverers found
+              </div>
+            ) : (
+              routesByDeliverer.map(({ delivererId, deliverer, routes: delivererRoutes }) => {
+                const totalLeaflets = delivererRoutes.reduce(
+                  (sum, r) => sum + (r.leaflet_count || 0),
+                  0
+                );
+                const delivererName = deliverer?.full_name || "Unknown";
+
+                return (
+                  <div
+                    key={delivererId}
+                    className="rounded-lg shadow-sm border border-gray-100 overflow-hidden"
+                    style={{ backgroundColor: '#E8F5E9' }}
+                  >
+                    {/* Deliverer Header */}
+                    <div className="px-6 py-4 border-b border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-3">
+                            <h3 className="text-lg font-semibold text-[#464D3F]">{delivererName}</h3>
+                            <span className="px-2 py-1 rounded bg-white/70 text-sm font-medium text-[#464D3F] border border-gray-200">
+                              {delivererRoutes.length} {delivererRoutes.length === 1 ? 'route' : 'routes'}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-sm text-gray-600">{totalLeaflets} {totalLeaflets === 1 ? 'leaflet' : 'leaflets'}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Routes Table */}
+                    <div className="overflow-x-auto bg-white">
+                      <Table className="border-l-0 border-r-0">
+                        <TableHeader>
+                          <TableRow className="border-b border-gray-200 bg-white hover:bg-white">
+                            <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Route Name</TableHead>
+                            <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Leaflets</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {delivererRoutes.map((route) => (
+                            <TableRow
+                              key={route.id}
+                              className="cursor-pointer bg-white border-b border-gray-100 hover:bg-gray-50/50 transition-colors"
+                              onClick={() => setSelectedRoute(route)}
+                            >
+                              <TableCell className="px-6 py-4 bg-white">
+                                <div className="flex items-center gap-2">
+                                  <BiMap className="size-4 text-gray-400" />
+                                  <span className="text-gray-900">{route.route_name}</span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="px-6 py-4 bg-white text-gray-600">{route.leaflet_count || 0}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+
+        {/* Open Routes Tab - Show even while loading if we have data */}
+        {(!loading || routes.length > 0) && !error && activeTab === "open-routes" && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+            {/* Filter Tabs */}
+            <div className="px-4 pt-4 pb-3 border-b border-gray-100">
+              <FilterTabs
+                tabs={[
+                  { id: "by-route", label: "By Route", count: tabCounts["by-route"] },
+                  { id: "by-deliverer", label: "By Deliverer", count: tabCounts["by-deliverer"] },
+                  { id: "open-routes", label: "Open Routes", count: tabCounts["open-routes"] },
+                ]}
+                activeTab={activeTab}
+                onTabChange={(tabId) => setActiveTab(tabId as TabId)}
+              />
+            </div>
+
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <Table className="border-l-0 border-r-0">
+                <TableHeader>
+                  <TableRow className="border-b border-gray-200 bg-white hover:bg-white">
+                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Route Name</TableHead>
+                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Leaflets</TableHead>
+                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Route Type</TableHead>
+                    <TableHead className="px-6 py-4 text-sm font-medium text-gray-700 bg-white">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {routes.length === 0 ? (
+                    <TableRow className="border-b border-gray-100">
+                      <TableCell colSpan={4} className="text-center py-12 text-gray-500 bg-white">
+                        No open routes found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    routes.map((route) => (
+                      <TableRow
+                        key={route.id}
+                        className="cursor-pointer bg-white border-b border-gray-100 hover:bg-gray-50/50 transition-colors"
+                        onClick={() => setSelectedRoute(route)}
+                      >
+                        <TableCell className="px-6 py-4 bg-white font-medium text-gray-900">{route.route_name}</TableCell>
+                        <TableCell className="px-6 py-4 bg-white text-gray-600">{route.leaflet_count || 0}</TableCell>
+                        <TableCell className="px-6 py-4 bg-white text-gray-600">{route.route_type || "—"}</TableCell>
+                        <TableCell className="px-6 py-4 bg-white">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Placeholder for assign functionality
+                              alert("Assign functionality coming soon");
+                            }}
+                          >
+                            Assign
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         )}
       </div>
