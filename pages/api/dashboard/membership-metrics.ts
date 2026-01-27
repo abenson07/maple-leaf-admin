@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 // import Stripe from 'stripe'; // Commented out - Stripe bundling issue with Webflow Cloud
 import { serverSupabase } from '@/lib/serverSupabase';
 import { MonthlyMetric, ProductMonthlyAverages } from '@/data/dashboard';
+import type { Memberships } from '@/schemas/memberships';
 
 // Disable body parsing for GET requests (not needed, but for consistency)
 export const config = {
@@ -290,7 +291,7 @@ async function fetchMembershipMetrics(months: { month: string; startDate: Date; 
     const { data: memberships, error } = await serverSupabase
       .from('memberships')
       .select('id, created_at, last_renewal, status')
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: true }) as { data: Memberships[] | null; error: any };
     
     if (error) {
       console.error('Error fetching memberships:', error);

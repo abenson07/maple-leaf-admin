@@ -26,12 +26,15 @@ function getSessionCookie(request: NextRequest): string | null {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // With basePath: '/dashboard', Next.js strips the basePath from pathname
+  // So /dashboard/login becomes /login, /dashboard/api/auth becomes /api/auth, etc.
+
   // Allow access to login page
-  if (pathname === '/login' || pathname === '/dashboard/login') {
-    // If already authenticated (has valid token format), redirect to dashboard
+  if (pathname === '/login') {
+    // If already authenticated (has valid token format), redirect to home
     const sessionToken = getSessionCookie(request);
     if (isValidTokenFormat(sessionToken)) {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+      return NextResponse.redirect(new URL('/', request.url));
     }
     return NextResponse.next();
   }

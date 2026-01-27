@@ -18,27 +18,58 @@ if (typeof window !== 'undefined') {
  * - ONLY use in server-side contexts (API routes, getServerSideProps, etc.)
  * - Always validate user permissions before performing operations
  */
-function getServerSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+let _serverSupabaseClient: ReturnType<typeof createClient> | null = null;
 
-  // Validate at runtime only (not during build)
-  // During build, env vars are not available, so we skip validation
-  // At runtime in API routes/server functions, validation will occur when env vars are actually used
-  // We defer validation to the actual API call rather than module load time
-  
-  // Use fallback values during build (env vars not available)
-  // At runtime, real values from Webflow Cloud environment will be injected
-  return createClient(
-    supabaseUrl || 'https://placeholder.supabase.co',
-    supabaseServiceRoleKey || 'placeholder-service-role-key',
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
+function getServerSupabaseClient() {
+  // Lazy initialization - only create client when actually used (at runtime, not build time)
+  if (!_serverSupabaseClient) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    // Validate environment variables at runtime with clear error messages
+    if (!supabaseUrl) {
+      const errorMsg = 'NEXT_PUBLIC_SUPABASE_URL environment variable is not set. Please configure it in Webflow Cloud environment variables.'
+      console.error('[serverSupabase]', errorMsg)
+      throw new Error(errorMsg)
     }
-  )
+    if (!supabaseServiceRoleKey) {
+      const errorMsg = 'SUPABASE_SERVICE_ROLE_KEY environment variable is not set. Please configure it in Webflow Cloud environment variables.'
+      console.error('[serverSupabase]', errorMsg)
+      throw new Error(errorMsg)
+    }
+    
+    _serverSupabaseClient = createClient(
+      supabaseUrl,
+      supabaseServiceRoleKey,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+  }
+  
+  return _serverSupabaseClient
 }
 
-export const serverSupabase = getServerSupabaseClient()
+// Export as a Proxy to enable lazy loading while maintaining the same API
+// This allows the client to be created only when actually used, not at module load time
+// Using explicit type assertion to work around TypeScript Proxy type inference limitations
+export const serverSupabase: ReturnType<typeof createClient> = new Proxy({} as any, {
+  get(_target, prop) {
+    try {
+      const client = getServerSupabaseClient()
+      const value = (client as any)[prop]
+      // Bind methods to maintain 'this' context
+      if (typeof value === 'function') {
+        return value.bind(client)
+      }
+      return value
+    } catch (error) {
+      // Re-throw with context
+      console.error('[serverSupabase] Error accessing property:', prop, error)
+      throw error
+    }
+  }
+}) as ReturnType<typeof createClient>
