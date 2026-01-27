@@ -35,6 +35,9 @@ yarn-error.log*
 wrangler.json
 .wrangler
 .open-next
+next.config.ts
+webflow-loader.ts
+clouduser.next.config.js
 
 # typescript
 *.tsbuildinfo
