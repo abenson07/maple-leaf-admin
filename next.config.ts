@@ -1,24 +1,20 @@
 import type { NextConfig } from "next";
-import userConfig from './clouduser.next.config';
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
-const webflowOverrides: NextConfig = {
+// Initialize OpenNext Cloudflare for development
+initOpenNextCloudflareForDev();
+
+const nextConfig: NextConfig = {
+  // Configure the base path and asset prefix to reflect the mount path of your environment
+  // For example, if your app is mounted at /dashboard, set basePath and assetPrefix to '/dashboard'
   basePath: '/dashboard',
-  assetPrefix: 'https://3b988a53-872d-46e0-9bf4-cbeae5d71ad9.wf-app-prod.cosmic.webflow.services/dashboard',
+  assetPrefix: '/dashboard',
   images: {
-    ...userConfig.images,
     // TODO: determine whether any of the non-custom loader options (imgix, cloudinary, akamai) work
     // and if so allow them to be used here
     loader: 'custom',
-    loaderFile: userConfig.images?.loaderFile || './webflow-loader.ts',
+    loaderFile: './webflow-loader.ts',
   },
 };
 
-const nextConfig: NextConfig = {
-  ...userConfig,
-  ...webflowOverrides,
-};
-
 export default nextConfig;
-
-import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
-initOpenNextCloudflareForDev();
